@@ -1,0 +1,129 @@
+{
+  "bib_data": {
+    "title": "XBox 360",
+    "author": "Microsoft",
+    "mms_id": "9984898401852",
+    "bib_suppress_from_publishing": "false",
+    "complete_edition": "",
+    "network_number": [
+      "(OrU)b36609079-01alliance_uo"
+    ],
+    "link": "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/9984898401852"
+  },
+  "holding_data": {
+    "holding_id": "22274069860001852",
+    "holding_suppress_from_publishing": "false",
+    "calculated_suppress_from_publishing": "false",
+    "permanent_call_number_type": {
+      "value": "#",
+      "desc": "No information provided"
+    },
+    "permanent_call_number": "Game Kit 4",
+    "call_number_type": {
+      "value": "#",
+      "desc": "No information provided"
+    },
+    "call_number": "Game Kit 4",
+    "accession_number": "",
+    "copy_id": "2",
+    "in_temp_location": false,
+    "temp_library": {},
+    "temp_location": {},
+    "temp_call_number_type": {
+      "value": ""
+    },
+    "temp_call_number": "",
+    "temp_call_number_source": "",
+    "temp_policy": {
+      "value": ""
+    },
+    "link": "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/9984898401852/holdings/22274069860001852"
+  },
+  "item_data": {
+    "pid": "23193212440001852",
+    "barcode": "35025040997286",
+    "policy": {
+      "value": "999",
+      "desc": "Default"
+    },
+    "provenance": {
+      "value": ""
+    },
+    "description": "",
+    "library": {
+      "value": "Science",
+      "desc": "Price Science Commons and Research Library"
+    },
+    "location": {
+      "value": "sgames",
+      "desc": "Science games"
+    },
+    "pages": "",
+    "pieces": "",
+    "requested": false,
+    "creation_date": "2009-10-14Z",
+    "modification_date": "2018-01-26Z",
+    "base_status": {
+      "value": "0",
+      "desc": "Item not in place"
+    },
+    "awaiting_reshelving": false,
+    "physical_material_type": {
+      "value": "KIT",
+      "desc": "Kit"
+    },
+    "po_line": "",
+    "is_magnetic": false,
+    "arrival_date": "2009-10-15Z",
+    "year_of_issue": "",
+    "enumeration_a": "",
+    "enumeration_b": "",
+    "enumeration_c": "",
+    "enumeration_d": "",
+    "enumeration_e": "",
+    "enumeration_f": "",
+    "enumeration_g": "",
+    "enumeration_h": "",
+    "chronology_i": "",
+    "chronology_j": "",
+    "chronology_k": "",
+    "chronology_l": "",
+    "chronology_m": "",
+    "break_indicator": {
+      "value": ""
+    },
+    "pattern_type": {
+      "value": ""
+    },
+    "linking_number": "",
+    "type_of_unit": "",
+    "replacement_cost": 479,
+    "receiving_operator": "import",
+    "process_type": {
+      "value": "MISSING",
+      "desc": "Missing"
+    },
+    "inventory_number": "",
+    "inventory_price": "",
+    "alternative_call_number": "",
+    "alternative_call_number_type": {
+      "value": ""
+    },
+    "storage_location_id": "",
+    "public_note": "fake public note",
+    "fulfillment_note": "toggled missing status from technical migration. was breaking bookings - SDG",
+    "internal_note_1": "STATUS2: r|ICODE2: p|I TYPE2: 77|LOCATION: orvng|RECORD #(ITEM)2: i45612675",
+    "internal_note_2": "NOTE(ITEM): serial number: 118381693005",
+    "internal_note_3": "Status: r - IN REPAIR, 2018/1/26 toggled missing status from technical migration. was breaking bookings - SDG",
+    "statistics_note_1": "TOT CHKOUT: 61",
+    "statistics_note_2": "LYCIRC: 0|YTDCIRC: 43",
+    "statistics_note_3": "LCHKIN: 03-20-2014 10:03|INTL USE : 0",
+    "physical_condition": {},
+    "committed_to_retain": {},
+    "retention_reason": {
+      "value": ""
+    },
+    "retention_note": ""
+  },
+  "link": "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/9984898401852/holdings/22274069860001852/items/23193212440001852"
+}
