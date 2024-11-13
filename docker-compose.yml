@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+  server:
+    image: uoregon-libraries/rds_alma_tools:20241113
+    ports: 
+      - '3000:3000'
+    environment:
+      - ALMA_URL=$ALMA_URL
+      - PORT=:3000
+      - HOME_DIR=$HOME_DIR
+      - ALMA_KEY=$ALMA_KEY
+      - VERBOSE=true
+
+    tty: true
+    volumes:
+      - .:/usr/local/src/rds_alma_tools
