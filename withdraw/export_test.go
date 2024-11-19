@@ -40,6 +40,7 @@ func TestProcessItem(t *testing.T){
   if arr[10] != "STATUS2: r|ICODE2: p|I TYPE2: 77|LOCATION: orvng|RECORD #(ITEM)2: i45612675" { t.Fatalf("internal note 1 incorrect") }
   if arr[11] != "NOTE(ITEM): serial number: 118381693005" { t.Fatalf("internal note 2 incorrect") }
   if arr[12] != "Status: r - IN REPAIR, 2018/1/26 toggled missing status from technical migration. was breaking bookings - SDG" { t.Fatalf("internal note 3 incorrect") }
+  if arr[13] != "fake retention note" { t.Fatalf("retention note incorrect") }
 }
 
 func Contains(hay []string, needle string) bool {
