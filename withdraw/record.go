@@ -9,7 +9,7 @@ type Record struct{
 }
 
 func (r Record)Stringify()string{
-  str := fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
+  str := fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
     r.Bib_data.Mms_id, 
     r.Bib_data.Title,
     r.Holding_data.Holding_id,
@@ -22,7 +22,8 @@ func (r Record)Stringify()string{
     r.Item_data.Fulfillment_note,
     r.Item_data.Internal_note_1,
     r.Item_data.Internal_note_2,
-    r.Item_data.Internal_note_3)
+    r.Item_data.Internal_note_3,
+    r.Item_data.Retention_note)
   return str
 }
 
@@ -46,6 +47,7 @@ type Item struct{
   Internal_note_1 string `json:"internal_note_1"`
   Internal_note_2 string `json:"internal_note_2"`
   Internal_note_3 string `json:"internal_note_3"`
+  Retention_note string `json:"retention_note"`
 }
 
 type Value struct{

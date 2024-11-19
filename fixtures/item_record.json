@@ -123,7 +123,7 @@
     "retention_reason": {
       "value": ""
     },
-    "retention_note": ""
+    "retention_note": "fake retention note"
   },
   "link": "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/9984898401852/holdings/22274069860001852/items/23193212440001852"
 }
