@@ -6,7 +6,7 @@ import(
   "log"
 )
 
-func RequestDump(verbose string, req http.Request){
+func RequestDump(verbose string, req *http.Request){
   if verbose == "true" {
     reqdump, err := httputil.DumpRequest(req, true)
     if err != nil { log.Println(err) } else {
@@ -14,7 +14,7 @@ func RequestDump(verbose string, req http.Request){
   }
 }
 
-func ResponseDump(verbose string, response http.Response){
+func ResponseDump(verbose string, response *http.Response){
   if verbose == "true" {
     respdump, err := httputil.DumpResponse(response, true)
     if err != nil { log.Println(err) } else {

@@ -1,28 +1,27 @@
 package connect
 
 import(
-  "url"
-  "fmt"
+
   "os"
   "net/http"
   "log"
   "time"
   "errors"
+  "io"
   "strings"
 )
 
-//url /almaws/v1/conf/sets/setid
-//params: api: "conf", param_ids: ["sets", <setid>]
+//url /almaws/v1/conf/sets/<setid>/members
+//params: limit=100, apikey=abcde12341234
 //url /almaws/v1/bibs/<mms_id>/holdings/<holding_id>/items/<item_id>
-//params: api: "bibs", param_ids: [<mms_id>, "holdings", <holding_id>, "items", <item_id>]
+//params: view=brief, apikey=abcde12341234
 
-func Get(api string, param_ids []string)(string, error){
+func Get(url string, params []string)(string, error){
   verbose := os.Getenv("VERBOSE")
-  base_url := os.Getenv("ALMA_URL")
-  test := os.Getenv("TEST")
-  url := url.JoinPath(base_url, api, strings.Join(param_ids[:],"/")) 
+  param_str := strings.Join(params[:], "&")
+  final_url := url + "?" + param_str
 
-  req, err := http.NewRequest("GET", url)
+  req, err := http.NewRequest("GET", final_url, nil)
   if err != nil { log.Println(err); return "", errors.New("unable to create http request") }
   req.Header.Set("accept", "application/json")
 
@@ -30,8 +29,6 @@ func Get(api string, param_ids []string)(string, error){
   client := &http.Client{
     Timeout: time.Second * 60,
   }
-
-  if test == "true" { return fmt.Sprintf("{\"id\":\"%s\"}", id), nil }
 
   response, err := client.Do(req)
   ResponseDump(verbose, response)
