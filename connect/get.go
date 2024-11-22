@@ -16,13 +16,13 @@ import(
 //url /almaws/v1/bibs/<mms_id>/holdings/<holding_id>/items/<item_id>
 //params: view=brief, apikey=abcde12341234
 
-func Get(url string, params []string)(string, error){
+func Get(url string, params []string)([]byte, error){
   verbose := os.Getenv("VERBOSE")
   param_str := strings.Join(params[:], "&")
   final_url := url + "?" + param_str
 
   req, err := http.NewRequest("GET", final_url, nil)
-  if err != nil { log.Println(err); return "", errors.New("unable to create http request") }
+  if err != nil { log.Println(err); return nil, errors.New("unable to create http request") }
   req.Header.Set("accept", "application/json")
 
   RequestDump(verbose, req)
@@ -33,10 +33,10 @@ func Get(url string, params []string)(string, error){
   response, err := client.Do(req)
   ResponseDump(verbose, response)
   defer response.Body.Close()
-  if err != nil { log.Println(err); return "", errors.New("unable to complete http request") }
+  if err != nil { log.Println(err); return nil, errors.New("unable to complete http request") }
   body, err := io.ReadAll(response.Body)
-  if err != nil { log.Println(err); return "", errors.New("unable to read response from alma") }
-  if response.StatusCode != 200 { return string(body), errors.New("alma errors") }
+  if err != nil { log.Println(err); return nil, errors.New("unable to read response from alma") }
+  if response.StatusCode != 200 { return body, errors.New("alma errors") }
 
-  return string(body), nil
+  return body, nil
 }
