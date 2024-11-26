@@ -1,6 +1,9 @@
 package withdraw
 
-import "fmt"
+import (
+  "fmt"
+  "strings"
+)
 
 type Record struct{
   Bib_data Bib `json:"bib_data"`
@@ -56,4 +59,14 @@ type Value struct{
 }
 type Desc struct{
   Desc string `json:"desc"`
+}
+
+func LineMap(line string)map[string]string{
+  m := map[string]string{}
+  keys := strings.Split(BriefItemHead(), "\t")
+  arr := strings.Split(line, "\t")
+  for ind, key := range keys{
+    m[key] = arr[ind]
+  }
+  return m
 }

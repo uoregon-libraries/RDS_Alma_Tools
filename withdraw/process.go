@@ -67,14 +67,14 @@ func FiscalYear(t time.Time)string{
 }
 
 func UpdateItem(newLocType string, data string)([]byte, error){
-  arr := strings.Split(data, "\t")
-  url := BuildItemLink(arr[0], arr[2], arr[3])
+  lineMap := LineMap(data)
+  url := BuildItemLink(lineMap["mms_id"], lineMap["holding_id"], lineMap["item_id"])
   params := []string{ ApiKey() }
   itemRec,_ := connect.Get(url, params)
   libMap := LoadMap()
-  newLibVal := libMap[Key{arr[6],newLocType,"value"}]
-  newLibDesc := libMap[Key{arr[6],newLocType,"desc"}]
-  internalNote3 := arr[12] + "|WD FY" + FiscalYear(TimeNow())
+  newLibVal := libMap[Key{lineMap["library"],newLocType,"value"}]
+  newLibDesc := libMap[Key{lineMap["library"],newLocType,"desc"}]
+  internalNote3 := lineMap["internal_note_3"] + "|WD FY" + FiscalYear(TimeNow())
   newStatusDesc := "missing"
   newStatusVal := ""
   //using sjson insert new library, status, append note
