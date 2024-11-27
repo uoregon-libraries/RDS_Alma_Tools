@@ -12,12 +12,10 @@ import(
 func TestExtractLinks(t *testing.T){
   homedir := os.Getenv("HOME_DIR")
   data, err := os.ReadFile(homedir + "/fixtures/set_members.json")
-  fmt.Println(data)
   if err != nil { t.Fatalf("did not read file") }
   links := ExtractLinks(data)
   if !Contains(links, "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/9994938301852/holdings/22348542010001852/items/23189116110001852") {  t.Errorf("first link is not present") }
   if !Contains(links,  "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/9994936001852/holdings/22189197510001852/items/23189197500001852") {  t.Errorf("second link is not present") }
-  fmt.Println("end of extract links")
 }
 
 func TestProcessItem(t *testing.T){
