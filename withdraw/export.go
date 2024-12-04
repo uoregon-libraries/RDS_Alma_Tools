@@ -55,6 +55,7 @@ func BriefItemHead()string{
   properties := []string{
     "mms_id",
     "title",
+    "oclc",
     "holding_id",
     "pid",
     "barcode",

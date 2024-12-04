@@ -6,6 +6,7 @@
     "bib_suppress_from_publishing": "false",
     "complete_edition": "",
     "network_number": [
+      "(OCoLC)ocm12345678",
       "(OrU)b36609079-01alliance_uo"
     ],
     "link": "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/9984898401852"
