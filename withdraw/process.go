@@ -8,23 +8,24 @@ import(
   "github.com/tidwall/sjson"
   "os"
   "bufio"
-  //"github.com/tidwall/gjson"
+  "github.com/tidwall/gjson"
   "errors"
   "strings"
   "net/url"
   "strconv"
   "time"
-  "fmt"
+//  "fmt"
 )
 
 func ProcessHandler(c echo.Context)(error){
   //get uploaded file
-  err := UpdateItems(c)
-  if err != nil { log.Println(err); return c.String(http.StatusBadRequest, "Could not process items") }
+  var report connect.Report
+  report, err := UpdateItems(report, c)
+  if err != nil { log.Println(err); return c.String(http.StatusBadRequest, err.Error()) }
   
   //next steps...
 
-  return c.String(http.StatusOK, "")
+  return c.String(http.StatusOK, report.ResponsesToString())
 }
 
 func BuildItemLink(mmsId string, holdingId string, pid string)string{
@@ -33,10 +34,10 @@ func BuildItemLink(mmsId string, holdingId string, pid string)string{
   return _url.String()
 }
 
-func UpdateItems(c echo.Context)error{
+func UpdateItems(r connect.Report, c echo.Context)(connect.Report, error){
   file, _ := c.FormFile("file")
   src, err := file.Open()
-  if err != nil { log.Println(err); return errors.New("Unable to open file") }
+  if err != nil { log.Println(err); return r, errors.New("Unable to open file") }
   defer src.Close()
 
   //process the data for updating item records
@@ -45,10 +46,15 @@ func UpdateItems(c echo.Context)error{
     line := scanner.Text()
     itemRec, err := UpdateItem(c.Param("loc_type"), line)
     if err != nil {}
-    fmt.Println(string(itemRec))
-    //err := connect.Post(url, params, itemRec)
+    params := []string{ ApiKey() }
+    url := gjson.GetBytes(itemRec, "item_data.link").String()
+    _, err = connect.Put(url, params, string(itemRec))
+    if err != nil {
+      r.Responses = append(r.Responses, connect.Response{ url, connect.ExtractAlmaError(err.Error()) })
+    } else { r.Responses = append(r.Responses, connect.Response{ url, connect.BuildMessage("success") } )
+    }
   }
-  return nil
+  return r, nil
 }
 
 func TimeNow()time.Time{
@@ -56,6 +62,7 @@ func TimeNow()time.Time{
   t := time.Now().In(loc)
   return t
 }
+
 func FiscalYear(t time.Time)string{
   m := t.Format("01")
   y := t.Format("2006")

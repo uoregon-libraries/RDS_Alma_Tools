@@ -34,7 +34,7 @@ func Put(url string, params []string, json_record string)([]byte, error){
   if err != nil { log.Println(err); return nil, errors.New("unable to complete http request") }
   body, err := io.ReadAll(response.Body)
   if err != nil { log.Println(err); return nil, errors.New("unable to read response from alma") }
-  if response.StatusCode != 200 { return body, errors.New("alma errors") }
+  if response.StatusCode != 200 { return nil, errors.New(string(body)) }
 
   return body, nil
 }
