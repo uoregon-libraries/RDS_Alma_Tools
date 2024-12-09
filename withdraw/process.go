@@ -9,18 +9,22 @@ import(
   "os"
   "bufio"
   "github.com/tidwall/gjson"
-  "errors"
   "strings"
   "net/url"
   "strconv"
   "time"
-//  "fmt"
+  "mime/multipart"
 )
 
 func ProcessHandler(c echo.Context)(error){
   //get uploaded file
+  file, _ := c.FormFile("file")
+  src, err := file.Open()
+  if err != nil { log.Println(err); return c.String(http.StatusBadRequest, "Unable to open file") }
+  defer src.Close()
+
   var report connect.Report
-  report, err := UpdateItems(report, c)
+  report, err = UpdateItems(report, c, src)
   if err != nil { log.Println(err); return c.String(http.StatusBadRequest, err.Error()) }
   
   //next steps...
@@ -34,11 +38,7 @@ func BuildItemLink(mmsId string, holdingId string, pid string)string{
   return _url.String()
 }
 
-func UpdateItems(r connect.Report, c echo.Context)(connect.Report, error){
-  file, _ := c.FormFile("file")
-  src, err := file.Open()
-  if err != nil { log.Println(err); return r, errors.New("Unable to open file") }
-  defer src.Close()
+func UpdateItems(r connect.Report, c echo.Context, src multipart.File)(connect.Report, error){
 
   //process the data for updating item records
   scanner := bufio.NewScanner(src)
