@@ -5,15 +5,10 @@ import(
   "rds_alma_tools/connect"
   "log"
   "net/http"
-  "github.com/tidwall/sjson"
   "os"
-  "bufio"
-  "github.com/tidwall/gjson"
-  "strings"
   "net/url"
   "strconv"
   "time"
-  "mime/multipart"
 )
 
 func ProcessHandler(c echo.Context)(error){
@@ -24,9 +19,9 @@ func ProcessHandler(c echo.Context)(error){
   defer src.Close()
 
   var report connect.Report
-  report, err = UpdateItems(report, c, src)
-  if err != nil { log.Println(err); return c.String(http.StatusBadRequest, err.Error()) }
-  
+  loc_type := c.Param("loc_type")
+  report = UpdateItems(report, loc_type, src)
+
   //next steps...
 
   return c.String(http.StatusOK, report.ResponsesToString())
@@ -36,25 +31,6 @@ func BuildItemLink(mmsId string, holdingId string, pid string)string{
   _url,_ := url.Parse(BaseUrl())
   _url = _url.JoinPath("bibs", mmsId, "holdings", holdingId, "items", pid)
   return _url.String()
-}
-
-func UpdateItems(r connect.Report, c echo.Context, src multipart.File)(connect.Report, error){
-
-  //process the data for updating item records
-  scanner := bufio.NewScanner(src)
-  for scanner.Scan(){
-    line := scanner.Text()
-    itemRec, err := UpdateItem(c.Param("loc_type"), line)
-    if err != nil {}
-    params := []string{ ApiKey() }
-    url := gjson.GetBytes(itemRec, "item_data.link").String()
-    _, err = connect.Put(url, params, string(itemRec))
-    if err != nil {
-      r.Responses = append(r.Responses, connect.Response{ url, connect.ExtractAlmaError(err.Error()) })
-    } else { r.Responses = append(r.Responses, connect.Response{ url, connect.BuildMessage("success") } )
-    }
-  }
-  return r, nil
 }
 
 func TimeNow()time.Time{
@@ -73,47 +49,11 @@ func FiscalYear(t time.Time)string{
   }
 }
 
-func UpdateItem(newLocType string, data string)([]byte, error){
-  lineMap := LineMap(data)
-  url := BuildItemLink(lineMap["mms_id"], lineMap["holding_id"], lineMap["item_id"])
-  params := []string{ ApiKey() }
-  itemRec,_ := connect.Get(url, params)
-  libMap := LoadMap()
-  newLibVal := libMap[Key{lineMap["library"],newLocType,"value"}]
-  newLibDesc := libMap[Key{lineMap["library"],newLocType,"desc"}]
-  internalNote3 := lineMap["internal_note_3"] + "|WD FY" + FiscalYear(TimeNow())
-  newStatusDesc := "missing"
-  newStatusVal := ""
-  //using sjson insert new library, status, append note
-  itemRec,_ = sjson.SetBytes(itemRec, "item_data.library.value", newLibVal)
-  itemRec,_ = sjson.SetBytes(itemRec, "item_data.library.desc", newLibDesc)
-  itemRec,_ = sjson.SetBytes(itemRec, "item_data.internal_note_3", internalNote3)
-  itemRec,_ = sjson.SetBytes(itemRec, "item_data.base_status.value", newStatusVal)
-  itemRec,_ = sjson.SetBytes(itemRec, "item_data.base_status.desc", newStatusDesc)
-  return itemRec, nil
-}
-
-type Key struct{
-  Libname, Libtype, Proptype string
-}
-
-func LoadMap()map[Key]string{
-  libmap := map[Key]string{}
-  homedir := os.Getenv("HOME_DIR")
-  data,_ := os.Open(homedir + "/withdraw/library_map.txt")
-  fileScanner := bufio.NewScanner(data)
-  fileScanner.Split(bufio.ScanLines)
-  for fileScanner.Scan(){
-    arr := strings.Split(fileScanner.Text(), "\t")
-    libmap[Key{arr[0], arr[1], arr[2]}] = arr[3]
-  }
-  return libmap
-}
-
 func ApiKey()string{
   key := os.Getenv("ALMA_KEY")
   return "apikey=" + key
 }
+
 func BaseUrl()string{
   return os.Getenv("ALMA_URL")
 }

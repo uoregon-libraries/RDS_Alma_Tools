@@ -75,7 +75,6 @@ func LineMap(line string)map[string]string{
 }
 
 func OclcSelect(vals []string)string{
-  fmt.Println(vals)
   re := regexp.MustCompile(`\(OCoLC\)[a-z]*(.*)`)
   for _, val := range vals {
     arr := re.FindStringSubmatch(val)
