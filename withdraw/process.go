@@ -21,6 +21,10 @@ func ProcessHandler(c echo.Context)(error){
   var report connect.Report
   loc_type := c.Param("loc_type")
   report = UpdateItems(report, loc_type, src)
+  eligibleList, err := EligibleToUnlinkAndSuppressList(src)
+  if err != nil { return c.String(http.StatusBadRequest, report.ResponsesToString()) }
+
+  if len(eligibleList) == 0 { return c.String(http.StatusOK, report.ResponsesToString()) }
 
   //next steps...
 
