@@ -20,7 +20,7 @@ func ExportSetHandler(c echo.Context)(error) {
   set_data, err := connect.Get(full_url, params)
   if err != nil {log.Println(err); return echo.NewHTTPError(400, "Error retrieving set")}
   // get links for items
-  links := ExtractLinks([]byte(set_data))
+  links := ExtractLinks(set_data)
 
   //prepare file
   f, err := os.CreateTemp("","withdraw_set-")
@@ -55,6 +55,7 @@ func BriefItemHead()string{
   properties := []string{
     "mms_id",
     "title",
+    "oclc",
     "holding_id",
     "pid",
     "barcode",
@@ -77,7 +78,7 @@ func ProcessItem(url string)string{
   data, err := connect.Get(url, params)
   if err != nil { log.Println(err); return "" }
   var r Record
-  err = json.Unmarshal([]byte(data), &r)
+  err = json.Unmarshal(data, &r)
   if err != nil { log.Println(err); return ""}
   str := r.Stringify()
   return str

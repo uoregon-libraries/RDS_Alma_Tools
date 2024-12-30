@@ -1,6 +1,6 @@
 package connect
 
-import(
+import (
 
   "os"
   "net/http"
@@ -11,25 +11,25 @@ import(
   "strings"
 )
 
-//url /almaws/v1/conf/sets/<setid>/members
-//params: limit=100, apikey=abcde12341234
 //url /almaws/v1/bibs/<mms_id>/holdings/<holding_id>/items/<item_id>
-//params: view=brief, apikey=abcde12341234
-
-func Get(url string, params []string)([]byte, error){
+//params: apikey=abcde12341234
+func Put(_url string, params []string, json_record string)([]byte, error){
   verbose := os.Getenv("VERBOSE")
+  debug := os.Getenv("DEBUG")
   param_str := strings.Join(params[:], "&")
-  final_url := url + "?" + param_str
-
-  req, err := http.NewRequest("GET", final_url, nil)
+  final_url := _url + "?" + param_str
+  if debug == "true" {
+    log.Println("Swapping " + final_url + "for test url")
+    final_url = os.Getenv("TEST_URL")
+  }
+  data := strings.NewReader(json_record)
+  req, err := http.NewRequest("PUT", final_url, data)
   if err != nil { log.Println(err); return nil, errors.New("unable to create http request") }
   req.Header.Set("accept", "application/json")
-
   RequestDump(verbose, req)
   client := &http.Client{
     Timeout: time.Second * 60,
   }
-
   response, err := client.Do(req)
   ResponseDump(verbose, response)
   defer response.Body.Close()

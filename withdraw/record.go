@@ -1,6 +1,10 @@
 package withdraw
 
-import "fmt"
+import (
+  "fmt"
+  "strings"
+  "regexp"
+)
 
 type Record struct{
   Bib_data Bib `json:"bib_data"`
@@ -9,9 +13,10 @@ type Record struct{
 }
 
 func (r Record)Stringify()string{
-  str := fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
+  str := fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
     r.Bib_data.Mms_id, 
     r.Bib_data.Title,
+    OclcSelect(r.Bib_data.Oclc),
     r.Holding_data.Holding_id,
     r.Item_data.Item_pid,
     r.Item_data.Barcode,
@@ -30,6 +35,7 @@ func (r Record)Stringify()string{
 type Bib struct{
   Mms_id string `json:"mms_id"`
   Title string `json:"title"`
+  Oclc []string `json:"network_number"`
 }
 
 type Holding struct{
@@ -56,4 +62,25 @@ type Value struct{
 }
 type Desc struct{
   Desc string `json:"desc"`
+}
+
+func LineMap(line string)map[string]string{
+  m := map[string]string{}
+  keys := strings.Split(BriefItemHead(), "\t")
+  arr := strings.Split(line, "\t")
+  for ind, key := range keys{
+    m[key] = arr[ind]
+  }
+  return m
+}
+
+func OclcSelect(vals []string)string{
+  re := regexp.MustCompile(`\(OCoLC\)[a-z]*(.*)`)
+  for _, val := range vals {
+    arr := re.FindStringSubmatch(val)
+    if arr != nil {
+      return arr[1]
+    }
+  }
+  return ""
 }
