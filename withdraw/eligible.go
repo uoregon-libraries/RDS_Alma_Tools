@@ -31,9 +31,7 @@ func UniqueBibs(src io.Reader)map[string]bool{
   for scanner.Scan(){
     line := scanner.Text()
     lineMap := LineMap(string(line))
-    if unique[lineMap["mms_id"]] != true{
-      unique[lineMap["mms_id"]] = true
-    }
+    unique[lineMap["mms_id"]] = true
   }
   return unique
 }
@@ -51,10 +49,8 @@ func CheckLibrary(link string)([]bool, error){
   }
 }
 
-// runs logic for all items for a bib
-func EligibleToUnlinkAndSuppress(mms_id string)([]bool, error){
-  items, err := BibItems(mms_id)
-  if err != nil { return nil, err }
+// returns one result based on checking all items 
+func EligibleToUnlinkAndSuppress(items []string)([]bool, error){
   suppress := true
   for _, v:= range items{
     arr, err := CheckLibrary(v)
@@ -68,10 +64,12 @@ func EligibleToUnlinkAndSuppress(mms_id string)([]bool, error){
 //generates list of bibs to unlink or unlink and suppress
 //returns map of mmsid keys and []bool
 func EligibleToUnlinkAndSuppressList(src io.Reader)(map[string][]bool, error){
-  eligibleList := map[string][]bool{}
+  var eligibleList = map[string][]bool{}
   bibs := UniqueBibs(src)
   for k,_ := range bibs{
-    arr, err := EligibleToUnlinkAndSuppress(k)
+    items, err := BibItems(k)
+    if err != nil { return nil, err }
+    arr, err := EligibleToUnlinkAndSuppress(items)
     if err != nil { return nil, err }
     if arr[0] { eligibleList[k] = arr }
   }
