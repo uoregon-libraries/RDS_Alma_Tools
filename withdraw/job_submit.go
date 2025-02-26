@@ -6,10 +6,11 @@ import(
   "rds_alma_tools/connect"
   "encoding/json"
   "log"
-  "fmt"
   "strings"
   "os"
   "strconv"
+  "net/url"
+  "fmt"
 )
 
 // filename, list
@@ -55,12 +56,13 @@ func ExtractJobResults(resp []byte)string{
   return alert.String()
 }
 
-func SubmitJob(filename string, jobid string)(string, error){
-  url := fmt.Sprintf("%s/jobs/%s", BaseUrl(), jobid)
+func SubmitJob(filename string, jobid string, job_params []Param)(string, error){
+  _url,_ := url.Parse(BaseUrl())
+  _url = _url.JoinPath("conf", "jobs", jobid)
   params := []string{ "op=run", ApiKey() }
-  job := JobInit()
+  job := JobInit(job_params)
   json,_ := json.Marshal(job)
-  resp,err := connect.Post(url, params, string(json))
+  resp,err := connect.Post(_url.String(), params, string(json))
   if err != nil { 
     log.Println(err)
     WriteReport(filename, err.Error())
@@ -78,18 +80,18 @@ func ExtractJobInstance(resp []byte)(string){
 
 // boilerplate
 // finish this when the actual jobs are available
-func JobInit()Job{
-  job := Job{ Parameter: []Param{Param{Name: Val{Value: ""}, Value: ""}}}
+func JobInit(params []Param)Job{
+  job := Job{ Parameter: params}
   return job
 }
 
 type Job struct{
-  Parameter []Param
+  Parameter []Param `json:"parameter"`
 }
 
 type Param struct{
-  Name Val
-  Value string
+  Name Val     `json:"name"`
+  Value string `json:"value"`
 }
 
 // Val declaration in update_set

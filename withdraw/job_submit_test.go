@@ -51,7 +51,7 @@ func DummyJob(filename string, list map[string][]bool){
 }
 
 func TestSubmitJob(t *testing.T){
-  data := `{"Parameter":[{"Name":{"Value":""},"Value":""}]}`
+  data := `{"parameter":[{"name":{"value":"set_id"},"value":"56789"}]}`
   return_data := `{"additional_info":{"link":"http://example.org/12121212"}}`
   ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     body, _ := io.ReadAll(r.Body)
@@ -66,7 +66,10 @@ func TestSubmitJob(t *testing.T){
   os.Setenv("ALMA_KEY", "123123")
   os.Setenv("TEST_URL", ts.URL)
   filename := "testsubmitjob"
-  link,_ := SubmitJob(filename, "123456")
+  var params = []Param{
+    Param{ Name: Val{ Value: "set_id" }, Value: "56789" },
+  }
+  link,_ := SubmitJob(filename, "123456", params)
   if link != "http://example.org/12121212" { t.Errorf("link was not returned") }
 }
 
