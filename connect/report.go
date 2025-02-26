@@ -4,6 +4,8 @@ import (
   "log"
   "github.com/tidwall/gjson"
   "encoding/json"
+  "os"
+  "fmt"
 )
 
 type Report struct {
@@ -33,6 +35,16 @@ func (r Report) ResponsesToString() string {
   return all_resp
 }
 
+func (r Report) WriteReport(filename string) {
+  //writes to directory
+  dir := os.Getenv("REPORT_DIR")
+  path := fmt.Sprintf("%s/%s", dir, filename)
+  f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+  defer f.Close()
+  if err != nil { log.Println(err) }
+  _,err = fmt.Fprintln(f, r.ResponsesToString())
+  if err != nil { log.Println(err) }
+}
 // for reporting internal string messages
 func BuildMessage(message string) Message{
   var m Message
