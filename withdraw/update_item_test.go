@@ -9,9 +9,10 @@ import(
   "os"
   "fmt"
   "time"
-  "rds_alma_tools/connect"
   "strings"
   "io"
+  "io/ioutil"
+  "slices"
 )
 
 func TestLoadMap(t *testing.T){
@@ -50,6 +51,9 @@ func TestUpdateItem(t *testing.T){
   }
   status := gjson.GetBytes(itemRec, "item_data.library.value")
   if status.String() != "Withdrawn" { t.Errorf("library is wrong") }
+  bib := gjson.GetBytes(itemRec, "bib_data")
+  if bib.String() != "" { t.Errorf("should not be bib_data") }
+  fmt.Println("done with test update item")
 }
 
 func TestSJSON(t *testing.T){
@@ -84,14 +88,18 @@ func TestUpdateItems(t *testing.T){
   os.Setenv("DEBUG", "true")
   os.Setenv("VERBOSE", "true")
   os.Setenv("TEST_URL", ts.URL + path)
-  var report connect.Report
+
   line := "9984898401852\tXBox 360\t12345678\t22274069860001852\t23193212440001852\t35025040997286\tItem not in place\tScience\tsgames\tfake public note\ttoggled missing status from technical migration. was breaking bookings - SDG\tSTATUS2: r|ICODE2: p|I TYPE2: 77|LOCATION: orvng|RECORD #(ITEM)2: i45612675\tNOTE(ITEM): serial number: 118381693005\tStatus: r - IN REPAIR, 2018/1/26 toggled missing status from technical migration. was breaking bookings - SDG\tfake_retention_note\n"
-
-  src := strings.NewReader(line)
-  report = UpdateItems(report, "withdraw", src)
-  id := gjson.Get(report.ResponsesToString(), "id")
+  report_dir := os.Getenv("REPORT_DIR")
+  filename := Filename()
+  filepath := report_dir + "/" + filename
+  pids := UpdateItems(filename, "withdraw", []byte(line))
+  content, err := ioutil.ReadFile(filepath)
+  if err != nil { t.Errorf("unable to read report") }
+  if !slices.Contains(pids, "23193212440001852") { t.Errorf("pids does not contain id") }
+  id := gjson.Get(string(content), "id")
   if !strings.Contains(id.String(), path) { t.Errorf("response does not contain id") }
-  message := gjson.Get(report.ResponsesToString(), "report.message")
+  message := gjson.Get(string(content), "report.message")
   if message.String() != "success" { t.Errorf("response does not contain message") }
-
+  _ = os.Remove(filepath)
 }
