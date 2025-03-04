@@ -1,8 +1,20 @@
 Knight	deselect	value	kdeselect
-Knight	deselect	desc	blah
+Knight	deselect	desc	Knight Deselected
 Knight	withdraw	value	kwithdrwn
-Knight	withdraw	desc	bleah
+Knight	withdraw	desc	Knight Withdrawn
 Science	deselect	value	sdeselect
-Science	deselect	desc	blah
+Science	deselect	desc	Science Deselected
 Science	withdraw	value	swithdrwn
-Science	withdraw	desc	bleah
+Science	withdraw	desc	Science Withdrawn
+AAA	deselect	value	adeselect
+AAA	withdraw	value	awithdrwn
+Law	deselect	value	ldeselect
+Law	withdraw	value	lwithdrwn
+Math	deselect	value	mdeselect
+Math	withdraw	value	mwithdrwn
+OIMB	deselect	value	odeselect
+OIMB	withdraw	value	owithdrwn
+SpecColl	deselect	value	spdeselect
+SpecColl	withdraw	value	spwithdrwn
+UOPDX	deselect	value	pdeselect
+UOPDX	withdraw	value	pwithdrwn

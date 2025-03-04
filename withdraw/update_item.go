@@ -10,7 +10,6 @@ import (
   "io"
   "time"
   "strconv"
-  "log"
   "bytes"
 )
 
@@ -54,16 +53,12 @@ func UpdateItem(newLocType string, data string)([]byte, connect.Response){
     if itemRec != nil { return nil, connect.Response{ Id: url, Message: connect.ExtractAlmaError(string(itemRec))} } else { return nil, connect.Response{ Id: url, Message: connect.BuildMessage(err.Error())} } }
   libMap := LoadMap()
   newLocVal := libMap[Key{lineMap["library"], newLocType, "value"}]
-  newLocDesc := libMap[Key{lineMap["library"], newLocType, "desc"}]
   newLibVal := "Withdrawn"
-  newLibDesc := "Withdrawn Library"
   internalNote3 := lineMap["internal_note_3"] + "|WD FY" + FiscalYear(TimeNow())
   //using sjson insert new library, location, append note
   itemRec,_ = sjson.SetBytes(itemRec, "item_data.location.value", newLocVal)
-  itemRec,_ = sjson.SetBytes(itemRec, "item_data.location.desc", newLocDesc)
   itemRec,_ = sjson.SetBytes(itemRec, "item_data.internal_note_3", internalNote3)
   itemRec,_ = sjson.SetBytes(itemRec, "item_data.library.value", newLibVal)
-  itemRec,_ = sjson.SetBytes(itemRec, "item_data.library.desc", newLibDesc)
   itemRec,_ = sjson.DeleteBytes(itemRec, "bib_data")
   return itemRec, connect.Response{Id:"", Message: connect.BuildMessage("")}
 }
