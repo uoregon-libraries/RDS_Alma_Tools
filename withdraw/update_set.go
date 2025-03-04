@@ -5,50 +5,50 @@ import (
   "rds_alma_tools/connect"
   "os"
   "log"
+  "net/url"
 )
 
 //setcontent either BIB_MMS or ITEM
 func UpdateSet(filename string, setname string, setcontent string, eligibleList []string)error{
   setid := os.Getenv(setname)
   params := []string{ "op=replace_members", ApiKey() }
-  url := BaseUrl() + "conf/sets/" + setid
-  set := InitSet(setname, setcontent)
+  _url,_ := url.Parse(BaseUrl())
+  _url = _url.JoinPath("conf", "sets", setid)
+  set := InitSet(setcontent)
   set = SetMembers(set, eligibleList)
   body, err := json.Marshal(set)
-  if err != nil {}
-  _, err = connect.Put(url, params, string(body))
+  if err != nil { log.Println(err); return err }
+  _, err = connect.Post(_url.String(), params, string(body))
   if err != nil { log.Println(err); return err }
   return nil 
 }
 
 func SetMembers(set Set, eligibleList []string)Set{
   for _,v := range eligibleList {
-    set.Members.Member = append(set.Members.Member, BibId{ Id: v })
+    set.Members.Member = append(set.Members.Member, RecId{ Id: v })
   }
   return set
 }
 
-func InitSet(name string, content string) Set{
-  var set = Set{Name: name, Type: Val{Value: "LOGICAL"}, Content: Val{Value: content}, Query: Val{Value: ""}, Members: MemberArr{ Member: []BibId{} }}
+func InitSet(content string) Set{
+  var set = Set{Type: Val{Value: "ITEMIZED"}, Content: Val{Value: content}, Members: MemberArr{ Member: []RecId{} }}
   return set
 }
 
 type Set struct {
-  Name string
-  Type Val
-  Content Val
-  Query Val
-  Members MemberArr
+  Type Val          `json:"type"`
+  Content Val       `json:"content"`
+  Members MemberArr `json:"members"`
 }
 
 type Val struct {
-  Value string
+  Value string `json:"value"`
 }
 
 type MemberArr struct {
-  Member []BibId
+  Member []RecId `json:"member"`
 }
 
-type BibId struct {
-  Id string
+type RecId struct {
+  Id string `json:"id"`
 }
