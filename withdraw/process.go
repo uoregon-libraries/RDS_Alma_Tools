@@ -16,6 +16,7 @@ func ProcessHandler(c echo.Context)(error){
   //get uploaded file
   file, _ := c.FormFile("file")
   src, err := file.Open()
+  data,_ := io.ReadAll(src)
   if err != nil { log.Println(err); return c.String(http.StatusBadRequest, "Unable to open file") }
   defer src.Close()
   //generate a filename to use throughout
@@ -23,15 +24,14 @@ func ProcessHandler(c echo.Context)(error){
 
   loc_type := c.FormValue("loc_type")
   if loc_type == "" { return c.String(http.StatusBadRequest, "Location type is required") }
-  Process(filename, loc_type, src)
+  Process(filename, loc_type, data)
   return c.String(http.StatusOK, fmt.Sprintf("Relevant updates will be written to \"%s\"", filename))
 }
 
 // runs initial steps and then launches the series of steps that require waiting
-func Process(filename, loc_type string, src io.Reader){
-  pids := UpdateItems(filename, loc_type, src) // THIS ONLY RETURNS SUCCESSFUL ITEMS?
-  var eligibleLists = map[string][]bool{}
-  eligibleLists, err := EligibleToUnlinkAndSuppressList(src) //THIS WORKS FROM ORIG LIST, NOT ITEMS
+func Process(filename, loc_type string, data []byte){
+  pids := UpdateItems(filename, loc_type, data) // THIS ONLY RETURNS SUCCESSFUL ITEMS?
+  eligibleLists, err := EligibleToUnlinkAndSuppressList(data) //THIS WORKS FROM ORIG LIST, NOT ITEMS
   if len(eligibleLists) == 0 { log.Println("eligibleLists starts empty"); return }
   if err != nil { WriteReport(filename, err.Error())}// CONTINUE ANYWAY
   ProcessStatusUpdate(filename, pids, eligibleLists)
@@ -45,12 +45,12 @@ func ProcessStatusUpdate(filename string, list []string, eligibleLists map[strin
   err := UpdateSet(filename, "UPDATE_ITEM_STATUS_SET", "ITEM", list)
   if err != nil { log.Println(err); WriteReport(filename, err.Error()); return}
 
-var params = []Param{
-    Param{ Name: Val{ Value: "MISSING_STATUS_selected" }, Value: "true"},
-    Param{ Name: Val{ Value: "MISSING_STATUS_value" }, Value: "MISSING" },
-    Param{ Name: Val{ Value: "MISSING_STATUS_condition" }, Value: "NULL" },
-    Param{ Name: Val{ Value: "set_id" }, Value: setid }, 
-  }
+    var params = []Param{
+      Param{ Name: Val{ Value: "MISSING_STATUS_selected" }, Value: "true"},
+      Param{ Name: Val{ Value: "MISSING_STATUS_value" }, Value: "MISSING" },
+      Param{ Name: Val{ Value: "MISSING_STATUS_condition" }, Value: "NULL" },
+      Param{ Name: Val{ Value: "set_id" }, Value: setid },
+    }
 
   instance,err := SubmitJob(filename, jobid, params)
   if err != nil { log.Println(err); WriteReport(filename, err.Error()); return}
@@ -59,7 +59,6 @@ var params = []Param{
   time.Sleep(span)
 
   if len(eligibleLists) == 0 {
-    log.Println("eligibleLists empty")
     CheckJob(instance, nil, filename, nil)
   } else { CheckJob(instance, ProcessUnlink, filename, eligibleLists) }
 }
@@ -67,8 +66,8 @@ var params = []Param{
 func ProcessUnlink(filename string, eligibleLists map[string][]bool){
   setid := os.Getenv("UNLINK_SET")
   jobid := os.Getenv("UNLINK_JOB_ID")
-  unlinkList := extractEligibles(eligibleLists, 0)
-
+  unlinkList := ExtractEligibles(eligibleLists, 0)
+  if len(unlinkList) == 0 { WriteReport(filename, "Nothing to unlink"); return }
   err := UpdateSet(filename, "UNLINK_SET", "BIB_MMS", unlinkList)
   if err != nil { log.Println(err); WriteReport(filename, err.Error()); return }
   params := []Param{ Param{ Name: Val{ Value: "set_id" }, Value: setid } }
@@ -86,7 +85,8 @@ func ProcessUnlink(filename string, eligibleLists map[string][]bool){
 func ProcessSuppress(filename string, eligibleLists map[string][]bool){
   setid := os.Getenv("SUPPRESS_SET")
   jobid := os.Getenv("SUPPRESS_JOB_ID")
-  suppressList := extractEligibles(eligibleLists, 1)
+  suppressList := ExtractEligibles(eligibleLists, 1)
+  if len(suppressList) == 0 { WriteReport(filename, "Nothing to suppress"); return }
 
   err := UpdateSet(filename, "SUPPRESS_SET", "BIB_MMS", suppressList)
   if err != nil { log.Println(err); WriteReport(filename, err.Error()); return }
@@ -105,7 +105,7 @@ func ProcessSuppress(filename string, eligibleLists map[string][]bool){
   CheckJob(instance, nil, filename, eligibleLists)
 }
 
-func extractEligibles(lists map[string][]bool, ind int)[]string{
+func ExtractEligibles(lists map[string][]bool, ind int)[]string{
   newlist := []string{}
   for k,v := range lists{
     if v[ind] { newlist = append(newlist, k) }
