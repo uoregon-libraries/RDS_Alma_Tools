@@ -35,6 +35,7 @@ func push(method string, _url string, params []string, json_record string)([]byt
   data := strings.NewReader(json_record)
   req, err := http.NewRequest(method, final_url, data)
   if err != nil { log.Println(err); return nil, errors.New("unable to create http request") }
+  req.Header.Set("Content-Type", "application/json")
   req.Header.Set("accept", "application/json")
   RequestDump(verbose, req)
   client := &http.Client{
