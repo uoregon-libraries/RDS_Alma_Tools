@@ -2,6 +2,7 @@ package withdraw
 
 import(
   "github.com/labstack/echo/v4"
+  faktory "github.com/contribsys/faktory/client"
   //"rds_alma_tools/oclc"
   "log"
   "net/http"
@@ -16,16 +17,28 @@ func ProcessHandler(c echo.Context)(error){
   //get uploaded file
   file, _ := c.FormFile("file")
   src, err := file.Open()
-  data,_ := io.ReadAll(src)
+  bytedata,_ := io.ReadAll(src)
   if err != nil { log.Println(err); return c.String(http.StatusBadRequest, "Unable to open file") }
   defer src.Close()
   //generate a filename to use throughout
-  filename := Filename()
-
-  loc_type := c.FormValue("loc_type")
+  var filename interface{} = Filename()
+  var worker = c.FormValue("worker")
+  var loc_type interface{} = c.FormValue("loc_type")
   if loc_type == "" { return c.String(http.StatusBadRequest, "Location type is required") }
-  Process(filename, loc_type, data)
-  return c.String(http.StatusOK, fmt.Sprintf("Relevant updates will be written to \"%s\"", filename))
+  var stringdata interface{} = string(bytedata)
+
+  client, err := faktory.Open()
+  if err != nil{ log.Println(err); return c.String(http.StatusInternalServerError, err.Error())}
+  //arg0 jobname, arg1 args for the job
+  job := faktory.NewJob("ProcessJob", filename, loc_type, stringdata)
+  job.Queue = fmt.Sprintf("process%s", worker)
+  job.ReserveFor = 7200
+  retries := 0
+  job.Retry = &retries
+  err = client.Push(job)
+  if err != nil{ log.Println(err); return c.String(http.StatusInternalServerError, err.Error()) }
+  base_url := os.Getenv("HOME_URL")
+  return c.HTML(http.StatusOK, fmt.Sprintf("<p>Relevant updates will be written to <a href=\"%s/reports/%s\">%s</a></p>", base_url, filename, filename))
 }
 
 // runs initial steps and then launches the series of steps that require waiting
