@@ -1,4 +1,4 @@
-package withdraw
+package file
 
 import(
   "bufio"
@@ -7,6 +7,7 @@ import(
   "fmt"
   "log"
   "strings"
+  "time"
 )
 
 func buildFromFile(filename string)[]string{
@@ -23,8 +24,8 @@ func buildFromFile(filename string)[]string{
 
 func Filename()string{
   homedir := os.Getenv("HOME_DIR")
-  nouns := buildFromFile(homedir + "/withdraw/nouns.txt")
-  mods := buildFromFile(homedir + "/withdraw/modifiers.txt")
+  nouns := buildFromFile(homedir + "/file/nouns.txt")
+  mods := buildFromFile(homedir + "/file/modifiers.txt")
   t := TimeNow()
   y := t.Format("2006")
   m := t.Format("01")
@@ -36,12 +37,20 @@ func Filename()string{
   return fmt.Sprintf("%s-%s-%s-%s:%s_%s-%s", y,m,d,h,mi,s1,s2)
 }
 
-func WriteReport(filename, message string){
+func WriteReport(filename string, messages []string){
   report_dir := os.Getenv("REPORT_DIR")
   path := report_dir + "/" + filename
   f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
   defer f.Close()
   if err != nil { log.Println(err) }
-  _, err = fmt.Fprintln(f, message)
-  if err != nil { log.Println(err) }
+  for _,v := range messages{
+    _, err = fmt.Fprintln(f, v)
+    if err != nil { log.Println(err) }
+  }
 }
+func TimeNow()time.Time{
+  loc, _ := time.LoadLocation("America/Los_Angeles")
+  t := time.Now().In(loc)
+  return t
+}
+
