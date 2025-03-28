@@ -14,7 +14,8 @@ func main() {
   e.Use(middleware.Recover())
 
   e.GET("/withdraw/export/:id", withdraw.ExportSetHandler)
-  //e.GET("/withdraw/process", withdraw.ProcessHandler)
-  //e.Static("withdraw", "views") //urlpath,directorypath, withdraw/set.html
+  e.POST("/withdraw/process", withdraw.ProcessHandler)
+  e.Static("/withdraw", "views/withdraw") //urlpath,directorypath, withdraw/set.html
+  e.Static("/reports", "views/reports")
   e.Logger.Fatal(e.Start(os.Getenv("PORT")))
 }

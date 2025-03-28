@@ -21,7 +21,7 @@ func CheckJob(joblink string, nextFun ProcessFunc, filename string, eligibleList
   span,_ := time.ParseDuration(os.Getenv("JOB_WAIT_TIME"))
   i := 0
   params := []string{ ApiKey() }
-
+  var result map[string]string
   for i < MAX {
     resp,err := connect.Get(joblink, params)
     if err != nil { 
@@ -31,29 +31,40 @@ func CheckJob(joblink string, nextFun ProcessFunc, filename string, eligibleList
       time.Sleep(span)
       continue
     }
-    result := ExtractJobResults(resp)
-    if result == "false"{
+    result = ExtractJobResults(resp)
+    if !strings.Contains(result["status"], "COMPLETED") {
       i += 1
       time.Sleep(span)
       continue
-    } else if result == "COMPLETED_SUCCESS" {
+    }
+    WriteReport(filename, fmt.Sprintf("%s: %s, %s", result["jobname"], result["status"], joblink))
+    if result["status"] == "COMPLETED_SUCCESS" {
       if nextFun != nil {
         nextFun(filename, eligibleList)
       }
     }
-    WriteReport(filename, result)
     return
   }
-  WriteReport(filename, "Unable to confirm that job completed: " + joblink)
+  WriteReport(filename, fmt.Sprintf("See %s re: %s", joblink, result["alert"]))
 }
 
-func ExtractJobResults(resp []byte)string{
+func DummyFunc(word string, list map[string][]bool){
+  log.Println("word is " + word)
+  for k, v := range list{
+    log.Println(fmt.Sprintf("%s, %t", k, v[0]))
+  }
+}
+
+func ExtractJobResults(resp []byte)map[string]string{
   //the docs on using progress are unclear
+  result := map[string]string{}
+  jobname := gjson.GetBytes(resp, "job_info.name")
+  result["jobname"] = jobname.String()
   status := gjson.GetBytes(resp, "status.value")
-  if !strings.Contains(status.String(), "COMPLETED") { return "false" }
-  if status.String() == "COMPLETED_SUCCESS" { return status.String() }
+  result["status"] = status.String()
   alert := gjson.GetBytes(resp, "alert.value")
-  return alert.String()
+  result["alert"] = alert.String()
+  return result
 }
 
 func SubmitJob(filename string, jobid string, job_params []Param)(string, error){

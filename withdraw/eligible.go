@@ -3,8 +3,7 @@ package withdraw
 import(
   "rds_alma_tools/connect"
   "github.com/tidwall/gjson"
-  "bufio"
-  "io"
+  "bytes"
 )
 
 //The only errors will be from connect.Get
@@ -25,15 +24,13 @@ func BibItems(mmsId string)([]string, error) {
 
 }
 
-func UniqueBibs(src io.Reader)map[string]bool{
+func UniqueBibs(data []byte)map[string]bool{
   unique := map[string]bool{}
-  scanner := bufio.NewScanner(src)
-  for scanner.Scan(){
-    line := scanner.Text()
+  lines := bytes.Split(data, []byte("\n"))
+  for _, line := range lines{
+    if string(line) == "" { break }
     lineMap := LineMap(string(line))
-    if unique[lineMap["mms_id"]] != true{
-      unique[lineMap["mms_id"]] = true
-    }
+    unique[lineMap["mms_id"]] = true
   }
   return unique
 }
@@ -51,10 +48,8 @@ func CheckLibrary(link string)([]bool, error){
   }
 }
 
-// runs logic for all items for a bib
-func EligibleToUnlinkAndSuppress(mms_id string)([]bool, error){
-  items, err := BibItems(mms_id)
-  if err != nil { return nil, err }
+// returns one result based on checking all items 
+func EligibleToUnlinkAndSuppress(items []string)([]bool, error){
   suppress := true
   for _, v:= range items{
     arr, err := CheckLibrary(v)
@@ -67,11 +62,13 @@ func EligibleToUnlinkAndSuppress(mms_id string)([]bool, error){
 
 //generates list of bibs to unlink or unlink and suppress
 //returns map of mmsid keys and []bool
-func EligibleToUnlinkAndSuppressList(src io.Reader)(map[string][]bool, error){
-  eligibleList := map[string][]bool{}
-  bibs := UniqueBibs(src)
+func EligibleToUnlinkAndSuppressList(data []byte)(map[string][]bool, error){
+  var eligibleList = map[string][]bool{}
+  bibs := UniqueBibs(data)
   for k,_ := range bibs{
-    arr, err := EligibleToUnlinkAndSuppress(k)
+    items, err := BibItems(k)
+    if err != nil { return nil, err }
+    arr, err := EligibleToUnlinkAndSuppress(items)
     if err != nil { return nil, err }
     if arr[0] { eligibleList[k] = arr }
   }

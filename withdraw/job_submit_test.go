@@ -21,7 +21,7 @@ func TestCheckJob(t *testing.T){
     if r.URL.Path == jobpath1 { 
       fmt.Fprintf(w, `{"status":{"value":"COMPLETED_SUCCESS"}}`)
     } else if r.URL.Path == jobpath2 {
-      fmt.Fprintf(w, `{"status":{"value":"QUEUED"}}`)
+      fmt.Fprintf(w, `{"status":{"value":"QUEUED"}, "alert":{"value": "BUSY"}}`)
     }
   }))
   defer ts.Close()
@@ -40,7 +40,7 @@ func TestCheckJob(t *testing.T){
   content, err := ioutil.ReadFile(filepath)
   if err != nil { t.Errorf("unable to read report") }
   if !strings.Contains(string(content), "From dummy job") { t.Errorf("report is incorrect") }
-  if !strings.Contains(string(content), "Unable to confirm") { t.Errorf("report is incorrect") }
+  if !strings.Contains(string(content), "BUSY") { t.Errorf("report is incorrect") }
   _ = os.Remove(filepath)
 }
 

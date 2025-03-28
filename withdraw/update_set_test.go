@@ -7,10 +7,11 @@ import(
   "os"
   "fmt"
   "io"
+  "slices"
 )
 
 func TestUpdateSet(t *testing.T){
-  data := `{"Name":"banana","Type":{"Value":"LOGICAL"},"Content":{"Value":"BIB_MMS"},"Query":{"Value":""},"Members":{"Member":[{"Id":"112358"}]}}`
+  data := `{"type":{"value":"ITEMIZED"},"content":{"value":"BIB_MMS"},"members":{"member":[{"id":"112358"}]}}`
   ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     body, _ := io.ReadAll(r.Body)
     if len(body) != len(data) { t.Errorf("body of request wrong") }
@@ -29,4 +30,15 @@ func TestUpdateSet(t *testing.T){
   filename := "testupdateset"
   err := UpdateSet(filename, "banana", "BIB_MMS", []string{"112358"})
   if err != nil { t.Errorf(err.Error()) }
+}
+
+func TestSetMembers( t *testing.T){
+  eligiblelist := []string{"a", "b", "c"}
+  set := InitSet("BIB_MMS")
+  set = SetMembers(set, eligiblelist)
+  arr := []string{}
+  for _,v := range set.Members.Member{
+    arr = append(arr, v.Id)
+  }
+  if !slices.Equal(arr, []string{"a", "b", "c"}) { t.Errorf("incorrect set membership") }
 }

@@ -5,26 +5,30 @@ import (
   "rds_alma_tools/connect"
   "github.com/tidwall/sjson"
   "os"
-  "bufio"
   "github.com/tidwall/gjson"
   "strings"
   "io"
+  "time"
+  "strconv"
+  "bytes"
 )
 
-func UpdateItems(r connect.Report, loc_type string, src io.Reader)(connect.Report){
-  //debug := os.Getenv("DEBUG")
-  //process the data for updating item records
-  scanner := bufio.NewScanner(src)
-  for scanner.Scan(){
-    line := scanner.Text()
-    itemRec, response := UpdateItem(loc_type, line)
+//returns list of item pids
+func UpdateItems(filename string, loc_type string, data []byte)([]string){
+  debug := os.Getenv("DEBUG")
+  var r connect.Report
+  pids := []string{}
+  lines := bytes.Split(data, []byte("\n"))
+  for _, line := range lines{
+    if string(line) == "" { break }
+    itemRec, response := UpdateItem(loc_type, string(line))
     if response.Id != ""{
       r.Responses = append(r.Responses, response)
       continue
     }
     params := []string{ ApiKey() }
     url := gjson.GetBytes(itemRec, "link").String()
-    //if debug == "true" { continue }
+    if debug == "true" { url = os.Getenv("TEST_URL") }
     body, err := connect.Put(url, params, string(itemRec))
     if err != nil {
       if body != nil {
@@ -32,9 +36,12 @@ func UpdateItems(r connect.Report, loc_type string, src io.Reader)(connect.Repor
       r.Responses = append(r.Responses, connect.Response{ Id: url, Message: connect.BuildMessage(err.Error()) }) }
     }
     if body != nil { r.Responses = append(r.Responses, connect.Response{ Id: url, Message: connect.BuildMessage("success") } )
+      pid := ExtractPid(url)
+      pids = append(pids, pid)
     }
   }
-  return r
+  r.WriteReport(filename)
+  return pids
 }
 
 func UpdateItem(newLocType string, data string)([]byte, connect.Response){
@@ -45,17 +52,14 @@ func UpdateItem(newLocType string, data string)([]byte, connect.Response){
   if err != nil { 
     if itemRec != nil { return nil, connect.Response{ Id: url, Message: connect.ExtractAlmaError(string(itemRec))} } else { return nil, connect.Response{ Id: url, Message: connect.BuildMessage(err.Error())} } }
   libMap := LoadMap()
-  newLocVal := libMap[Key{lineMap["library"],newLocType,"value"}]
-  newLocDesc := libMap[Key{lineMap["library"],newLocType,"desc"}]
-  newLibVal := "Withdrawn" /******Logic?******/
-  newLibDesc := "Withdrawn Library" /******************/
+  newLocVal := libMap[Key{lineMap["library"], newLocType, "value"}]
+  newLibVal := "Withdrawn"
   internalNote3 := lineMap["internal_note_3"] + "|WD FY" + FiscalYear(TimeNow())
   //using sjson insert new library, location, append note
   itemRec,_ = sjson.SetBytes(itemRec, "item_data.location.value", newLocVal)
-  itemRec,_ = sjson.SetBytes(itemRec, "item_data.location.desc", newLocDesc)
   itemRec,_ = sjson.SetBytes(itemRec, "item_data.internal_note_3", internalNote3)
   itemRec,_ = sjson.SetBytes(itemRec, "item_data.library.value", newLibVal)
-  itemRec,_ = sjson.SetBytes(itemRec, "item_data.library.desc", newLibDesc)
+  itemRec,_ = sjson.DeleteBytes(itemRec, "bib_data")
   return itemRec, connect.Response{Id:"", Message: connect.BuildMessage("")}
 }
 
@@ -66,12 +70,29 @@ type Key struct{
 func LoadMap()map[Key]string{
   libmap := map[Key]string{}
   homedir := os.Getenv("HOME_DIR")
-  data,_ := os.Open(homedir + "/withdraw/library_map.txt")
-  fileScanner := bufio.NewScanner(data)
-  fileScanner.Split(bufio.ScanLines)
-  for fileScanner.Scan(){
-    arr := strings.Split(fileScanner.Text(), "\t")
-    libmap[Key{arr[0], arr[1], arr[2]}] = arr[3]
+  src,_ := os.Open(homedir + "/withdraw/library_map.txt")
+  data,_ := io.ReadAll(src)
+  lines := bytes.Split(data, []byte("\n"))
+  for _,line := range lines{
+    if string(line) == "" { break }
+    arr := bytes.Split(line, []byte("\t"))
+    libmap[Key{string(arr[0]), string(arr[1]), string(arr[2])}] = string(arr[3])
   }
   return libmap
+}
+
+func FiscalYear(t time.Time)string{
+  m := t.Format("01")
+  y := t.Format("2006")
+  mInt, _ := strconv.Atoi(m)
+  if mInt > 6 { return y } else {
+    yInt, _ := strconv.Atoi(y)
+    return strconv.Itoa(yInt-1)
+  }
+}
+
+func ExtractPid(url string) string{
+  arr := strings.Split(url, "/")
+  length := len(arr)
+  return arr[length-1]
 }

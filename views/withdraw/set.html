@@ -5,11 +5,20 @@
     <title>Alma Set Upload</title>
 </head>
 <body>
-<h1>Upload a single Alma set file</h1>
+<h1>Upload a single Alma set file to begin withdraw process.</h1>
 
+<!--withdraw/process -->
 <form action="/withdraw/process" method="post" enctype="multipart/form-data">
-    File: <input type="file" name="file"><br><br>
-    <input type="submit" value="Submit">
+    <label for="file_upload">Upload a file</label>
+    <input type="file" name="file" id="file_upload" aria-required="true"><br><br>
+    <fieldset>
+      <legend>Choose location type (required)</legend>
+      <input type = "radio" name="loc_type" id="withdraw" value="withdraw">
+      <label for="withdraw">withdraw</label><br>
+      <input type = "radio" name="loc_type" id="deselect" value="deselect">
+      <label for="deselect">deselect</label><br>
+      <input type="submit" value="Submit">
+    </fieldset>
 </form>
 </body>
 </html>
