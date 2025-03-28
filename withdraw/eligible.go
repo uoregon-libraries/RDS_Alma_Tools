@@ -4,7 +4,18 @@ import(
   "rds_alma_tools/connect"
   "github.com/tidwall/gjson"
   "bytes"
+  "os"
+  "io"
+  "fmt"
+  "errors"
 )
+
+type Eligible struct {
+  Unlink   bool
+  Suppress bool
+  Unset    bool
+  Oclc     string
+}
 
 //The only errors will be from connect.Get
 //propagate and return nil
@@ -24,53 +35,78 @@ func BibItems(mmsId string)([]string, error) {
 
 }
 
-func UniqueBibs(data []byte)map[string]bool{
-  unique := map[string]bool{}
+func UniqueBibs(data []byte)map[string]string{
+  unique := map[string]string{}
   lines := bytes.Split(data, []byte("\n"))
   for _, line := range lines{
     if string(line) == "" { break }
     lineMap := LineMap(string(line))
-    unique[lineMap["mms_id"]] = true
+    unique[lineMap["mms_id"]] = lineMap["oclc"]
   }
   return unique
 }
 
-// runs logic for one item
-func CheckLibrary(link string)([]bool, error){
+type locationVals struct{
+  NZ string
+  Primo string
+  ORU string
+  UOL string
+}
+
+type LLKey struct{
+  LibCode string
+  LocCode string
+}
+
+func LibraryLocationMap()map[LLKey]locationVals{
+  locmap := map[LLKey]locationVals{}
+  homedir := os.Getenv("HOME_DIR")
+  src,_ := os.Open(homedir + "/withdraw/location_eligibility.txt")
+  data,_ := io.ReadAll(src)
+  lines := bytes.Split(data, []byte("\n"))
+  for _,line := range lines{
+    if string(line) == "" { break }
+    arr := bytes.Split(line, []byte("\t"))
+    locmap[LLKey{string(arr[0]), string(arr[1])}] = locationVals{NZ: string(arr[2]), Primo: string(arr[3]), ORU: string(arr[4]), UOL: string(arr[5])}
+  }
+  return locmap
+}
+
+func ItemLibraryLocation(link string)(LLKey, error){
   params := []string{"", ApiKey()}
   item, err := connect.Get(link, params)
-  if err != nil { return nil, err }
+  if err != nil { return LLKey{}, err }
   library := gjson.GetBytes([]byte(item), "item_data.library.value")
-  if library.String() == "Withdrawn" {
-    return []bool{ true, true }, nil } else if library.String() == "Department" {
-    return []bool{ true, false }, nil } else {
-    return []bool{ false, false }, nil
-  }
+  location := gjson.GetBytes([]byte(item), "item_data.location.value")
+  return LLKey{LibCode: library.String(), LocCode: location.String()}, nil
 }
 
-// returns one result based on checking all items 
-func EligibleToUnlinkAndSuppress(items []string)([]bool, error){
-  suppress := true
+func EligibleToUnlinkSuppressUnset(items []string)(Eligible, error){
+  locmap := LibraryLocationMap()
+  e := Eligible{Unlink: true, Suppress: true, Unset: true}
   for _, v:= range items{
-    arr, err := CheckLibrary(v)
-    if err != nil { return nil, err }
-    if arr[0] != true { return []bool{false,false}, nil }
-    if arr[1] != true { suppress = false }
+    k,err := ItemLibraryLocation(v)
+    if err != nil { return Eligible{}, err }
+    chart := locmap[k]
+    if chart.NZ == "" { return Eligible{}, errors.New("Eligibility not known") }
+    if chart.NZ == "Y" { e.Unlink = false }
+    if chart.Primo == "Y" { e.Suppress = false }
+    if chart.ORU == "Y" { e.Unset = false }
   }
-  return []bool{true, suppress}, nil
+  return e, nil
 }
 
-//generates list of bibs to unlink or unlink and suppress
-//returns map of mmsid keys and []bool
-func EligibleToUnlinkAndSuppressList(data []byte)(map[string][]bool, error){
-  var eligibleList = map[string][]bool{}
+func EligibleToUnlinkSuppressUnsetList(data []byte)(map[string]Eligible, []string){
+  var eligibleList = map[string]Eligible{}
   bibs := UniqueBibs(data)
-  for k,_ := range bibs{
+  errs := []string{}
+  for k,v := range bibs{
     items, err := BibItems(k)
-    if err != nil { return nil, err }
-    arr, err := EligibleToUnlinkAndSuppress(items)
-    if err != nil { return nil, err }
-    if arr[0] { eligibleList[k] = arr }
+    if err != nil { errs = append(errs, fmt.Sprintf("Eligibility error: %s", k)); continue }
+    eligible, err := EligibleToUnlinkSuppressUnset(items)
+    if err != nil { errs = append(errs, fmt.Sprintf("Eligibility error: %s", k)); continue }
+    eligible.Oclc = v
+    eligibleList[k] = eligible
   }
-  return eligibleList, nil
+  return eligibleList, errs
 }

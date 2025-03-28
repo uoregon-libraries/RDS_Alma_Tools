@@ -11,31 +11,6 @@ import(
   "io"
 )
 
-func TestCheckLibrary(t *testing.T){
-  data1 := `{"item_data": { "library": { "value": "Withdrawn", "desc": "Withdrawn Library" } } }`
-  data2 := `{"item_data": { "library": { "value": "Science", "desc": "Price Science Commons" } } }`
-  data3 := `{"item_data": { "library": { "value": "Department", "desc": "UO Departmental Library" } } }`
-  ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-    if r.URL.Path == "/bibs/123456789" {
-      fmt.Fprintf(w, data1)
-    } else if r.URL.Path == "/bibs/123456788" {
-      fmt.Fprintf(w, data2)
-    } else {
-      fmt.Fprintf(w, data3)
-    }
-   }))
-  defer ts.Close()
-
-  result, _ := CheckLibrary(ts.URL + "/bibs/123456789")
-  if !slices.Equal(result, []bool{true,true}) {t.Errorf("should be true/true")}
-
-  result, _ = CheckLibrary(ts.URL + "/bibs/123456788")
-  if !slices.Equal(result, []bool{false,false}) {t.Errorf("should be false/false")}
-
-  result, _ = CheckLibrary(ts.URL + "/bibs/123456787")
-  if !slices.Equal(result, []bool{true,false}) {t.Errorf("should be true/false")}
-}
-
 func TestUniqueBibs(t *testing.T){
   homedir := os.Getenv("HOME_DIR")
   src, err := os.Open(homedir + "/fixtures/export.tsv")
@@ -65,10 +40,37 @@ func TestBibItems(t *testing.T){
   if !slices.Contains(links, link2) { t.Errorf("link is missing") }
 }
 
-func TestEligibleToUnlinkAndSuppress(t *testing.T){
-  data1 := `{"item_data": {"library": {"value":"Withdrawn"}}}`
-  data2 := `{"item_data": {"library": {"value":"Department"}}}`
-  data3 := `{"item_data": {"library": {"value":"Banana"}}}`
+func TestItemLibraryLocation(t *testing.T){
+  data1 := `{"item_data": { "library": { "value": "Withdrawn", "desc": "Withdrawn Library" }, "location": { "value": "kwithdrwn", "desc": "Knight withdrawn" } } }`
+  data2 := `{"item_data": { "library": { "value": "Science", "desc": "Price Science Commons" }, "location": { "value": "swithdrwn", "desc": "Science withdrawn" } } }`
+  data3 := `{"item_data": { "library": { "value": "Department", "desc": "UO Departmental Library" }, "location": { "value": "zartmus", "desc": "Music" } } }`
+  ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    if r.URL.Path == "/bibs/123/holdings/456/items/7890" {
+      fmt.Fprintf(w, data1)
+    } else if r.URL.Path == "/bibs/456/holdings/789/items/1230" {
+      fmt.Fprintf(w, data2)
+    } else {
+      fmt.Fprintf(w, data3)
+    }
+   }))
+  defer ts.Close()
+  os.Setenv("ALMA_URL", ts.URL + "/")
+  os.Setenv("ALMA_KEY", "almakey")
+
+  result, _ := ItemLibraryLocation(ts.URL + "/bibs/123/holdings/456/items/7890")
+  if result.LocCode != "kwithdrwn" {t.Errorf("wrong location")}
+
+  result, _ = ItemLibraryLocation(ts.URL + "/bibs/456/holdings/789/items/1230")
+  if result.LocCode != "swithdrwn" {t.Errorf("wrong location")}
+
+  result, _ = ItemLibraryLocation(ts.URL + "/bibs/789/holdings/123/items/4560")
+  if result.LocCode != "zartmus" {t.Errorf("wrong location")}
+}
+
+func TestEligibleToUnlinkSuppressUnset(t *testing.T){
+  data1 := `{"item_data": { "library": { "value": "Withdrawn", "desc": "Withdrawn Library" }, "location": { "value": "kwithdrwn", "desc": "Knight withdrawn" } } }`
+  data2 := `{"item_data": { "library": { "value": "Knight", "desc": "Knight Library" }, "location": { "value": "kdres", "desc": "Knight something" } } }`
+  data3 := `{"item_data": { "library": { "value": "Department", "desc": "UO Departmental Library" }, "location": { "value": "zartmus", "desc": "Music" } } }`
   path1 := "/almaws/v1/bibs/123/holdings/456/items/7890"
   path2 := "/almaws/v1/bibs/123/holdings/456/items/7891"
   path3 := "/almaws/v1/bibs/123/holdings/456/items/7892"
@@ -87,10 +89,22 @@ func TestEligibleToUnlinkAndSuppress(t *testing.T){
   link1 := ts.URL + path1
   link2 := ts.URL + path2
   link3 := ts.URL + path3
-  result,_ := EligibleToUnlinkAndSuppress([]string{link1, link1})
-  if !slices.Equal(result, []bool{true, true}){t.Errorf("incorrect result")}
-  result,_ = EligibleToUnlinkAndSuppress([]string{link1, link2})
-  if !slices.Equal(result, []bool{true, false}){t.Errorf("incorrect result")}
-  result,_ = EligibleToUnlinkAndSuppress([]string{link1, link3})
-  if !slices.Equal(result, []bool{false, false}){t.Errorf("incorrect result")}
+  result,err := EligibleToUnlinkSuppressUnset([]string{link1, link1})
+  if err != nil { log.Println(err) }
+  if result.Unlink != true {t.Errorf("example1, incorrect unlink")}
+  if result.Suppress != true {t.Errorf("example1 incorrect suppress")}
+  if result.Unset != true {t.Errorf("example1 incorrect unset")}
+
+  result,err = EligibleToUnlinkSuppressUnset([]string{link1, link2})
+  if err != nil { log.Println(err) }
+  if result.Unlink != true {t.Errorf("example2 incorrect unlink")}
+  if result.Suppress != false {t.Errorf("example2 incorrect suppress")}
+  if result.Unset != false {t.Errorf("example2 incorrect unset")}
+
+  result,err = EligibleToUnlinkSuppressUnset([]string{link1, link3})
+  if err != nil { log.Println(err) }
+  if result.Unlink != true {t.Errorf("example3 incorrect unlink")}
+  if result.Suppress != false {t.Errorf("example3 incorrect suppress")}
+  if result.Unset != true {t.Errorf("example 3 incorrect unset")}
+
 }
