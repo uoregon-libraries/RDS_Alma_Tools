@@ -12,12 +12,12 @@ import(
   "strings"
   "io"
   "io/ioutil"
-  "slices"
+  "rds_alma_tools/file"
 )
 
 func TestLoadMap(t *testing.T){
-  lmap := LoadMap()
-  if lmap[Key{"Knight","withdraw","value"}] != "kwithdrwn" {
+  lmap := WithdrawDeselectMap()
+  if lmap[WDKey{"Knight","withdraw","value"}] != "kwithdrwn" {
     t.Errorf("new library value is wrong")
   }
 }
@@ -39,7 +39,7 @@ func TestUpdateItem(t *testing.T){
   defer ts.Close()
   os.Setenv("ALMA_URL", ts.URL + "/almaws/v1/")
 
-  fy := FiscalYear(TimeNow())
+  fy := FiscalYear(file.TimeNow())
   line := "9984898401852\tXBox 360\t12345678\t22274069860001852\t23193212440001852\t35025040997286\tItem not in place\tScience\tsgames\tfake public note\ttoggled missing status from technical migration. was breaking bookings - SDG\tSTATUS2: r|ICODE2: p|I TYPE2: 77|LOCATION: orvng|RECORD #(ITEM)2: i45612675\tNOTE(ITEM): serial number: 118381693005\tStatus: r - IN REPAIR, 2018/1/26 toggled missing status from technical migration. was breaking bookings - SDG\tfake_retention_note\n"
 
   itemRec, _ := UpdateItem("withdraw", line)
@@ -91,12 +91,15 @@ func TestUpdateItems(t *testing.T){
 
   line := "9984898401852\tXBox 360\t12345678\t22274069860001852\t23193212440001852\t35025040997286\tItem not in place\tScience\tsgames\tfake public note\ttoggled missing status from technical migration. was breaking bookings - SDG\tSTATUS2: r|ICODE2: p|I TYPE2: 77|LOCATION: orvng|RECORD #(ITEM)2: i45612675\tNOTE(ITEM): serial number: 118381693005\tStatus: r - IN REPAIR, 2018/1/26 toggled missing status from technical migration. was breaking bookings - SDG\tfake_retention_note\n"
   report_dir := os.Getenv("REPORT_DIR")
-  filename := Filename()
+  filename := file.Filename()
   filepath := report_dir + "/" + filename
   pids := UpdateItems(filename, "withdraw", []byte(line))
   content, err := ioutil.ReadFile(filepath)
   if err != nil { t.Errorf("unable to read report") }
-  if !slices.Contains(pids, "23193212440001852") { t.Errorf("pids does not contain id") }
+  //test pids, which is a map, for existence of mmsid as a key
+  _,ok := pids["23193212440001852"]
+  if ok == false { t.Errorf("pids does not contain id") }
+
   id := gjson.Get(string(content), "id")
   if !strings.Contains(id.String(), path) { t.Errorf("response does not contain id") }
   message := gjson.Get(string(content), "report.message")

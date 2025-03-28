@@ -27,18 +27,21 @@ func TestUpdateSet(t *testing.T){
   final_url := ts.URL + "/almaws/v1/conf/sets/" + setid
 
   os.Setenv("TEST_URL", final_url + "?apikey=123456&op=replace_members")
-  filename := "testupdateset"
-  err := UpdateSet(filename, "banana", "BIB_MMS", []string{"112358"})
+
+  eligibleList := map[string]Eligible{"112358": Eligible{Suppress: true, Unlink: true, Oclc: "54321"}}
+  err := UpdateSet("banana", "BIB_MMS", eligibleList)
   if err != nil { t.Errorf(err.Error()) }
 }
 
 func TestSetMembers( t *testing.T){
-  eligiblelist := []string{"a", "b", "c"}
+  eligiblelist := map[string]Eligible{
+    "a": Eligible{Suppress: true, Unlink: true, Oclc: "54321"},
+    "b": Eligible{Suppress: true, Unlink: true, Oclc: "54322"},
+    "c": Eligible{Suppress: true, Unlink: true, Oclc: "54323"}}
   set := InitSet("BIB_MMS")
   set = SetMembers(set, eligiblelist)
-  arr := []string{}
+  compare := []string{"a", "b", "c"}
   for _,v := range set.Members.Member{
-    arr = append(arr, v.Id)
+    if slices.Contains(compare, v.Id) != true { t.Errorf("incorrect set membership") }
   }
-  if !slices.Equal(arr, []string{"a", "b", "c"}) { t.Errorf("incorrect set membership") }
 }
