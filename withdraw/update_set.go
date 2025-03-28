@@ -9,7 +9,7 @@ import (
 )
 
 //setcontent either BIB_MMS or ITEM
-func UpdateSet(filename string, setname string, setcontent string, eligibleList []string)error{
+func UpdateSet(setname string, setcontent string, eligibleList map[string]Eligible)error{
   setid := os.Getenv(setname)
   params := []string{ "op=replace_members", ApiKey() }
   _url,_ := url.Parse(BaseUrl())
@@ -23,9 +23,9 @@ func UpdateSet(filename string, setname string, setcontent string, eligibleList 
   return nil 
 }
 
-func SetMembers(set Set, eligibleList []string)Set{
-  for _,v := range eligibleList {
-    set.Members.Member = append(set.Members.Member, RecId{ Id: v })
+func SetMembers(set Set, eligibleList map[string]Eligible)Set{
+  for k,_ := range eligibleList {
+    set.Members.Member = append(set.Members.Member, RecId{ Id: k })
   }
   return set
 }

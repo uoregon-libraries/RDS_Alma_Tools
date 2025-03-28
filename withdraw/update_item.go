@@ -3,6 +3,7 @@ package withdraw
 import (
 
   "rds_alma_tools/connect"
+  "rds_alma_tools/file"
   "github.com/tidwall/sjson"
   "os"
   "github.com/tidwall/gjson"
@@ -14,10 +15,10 @@ import (
 )
 
 //returns list of item pids
-func UpdateItems(filename string, loc_type string, data []byte)([]string){
+func UpdateItems(filename string, loc_type string, data []byte)(map[string]Eligible){
   debug := os.Getenv("DEBUG")
   var r connect.Report
-  pids := []string{}
+  pids := map[string]Eligible{}
   lines := bytes.Split(data, []byte("\n"))
   for _, line := range lines{
     if string(line) == "" { break }
@@ -37,7 +38,7 @@ func UpdateItems(filename string, loc_type string, data []byte)([]string){
     }
     if body != nil { r.Responses = append(r.Responses, connect.Response{ Id: url, Message: connect.BuildMessage("success") } )
       pid := ExtractPid(url)
-      pids = append(pids, pid)
+      pids[pid] = Eligible{}
     }
   }
   r.WriteReport(filename)
@@ -51,10 +52,11 @@ func UpdateItem(newLocType string, data string)([]byte, connect.Response){
   itemRec, err := connect.Get(url, params)
   if err != nil { 
     if itemRec != nil { return nil, connect.Response{ Id: url, Message: connect.ExtractAlmaError(string(itemRec))} } else { return nil, connect.Response{ Id: url, Message: connect.BuildMessage(err.Error())} } }
-  libMap := LoadMap()
-  newLocVal := libMap[Key{lineMap["library"], newLocType, "value"}]
+  libMap := WithdrawDeselectMap()
+  newLocVal := libMap[WDKey{lineMap["library"], newLocType, "value"}]
+  if newLocVal == "" { return nil, connect.Response{ Id: url, Message: connect.BuildMessage("Unable to determine new location") } }
   newLibVal := "Withdrawn"
-  internalNote3 := lineMap["internal_note_3"] + "|WD FY" + FiscalYear(TimeNow())
+  internalNote3 := lineMap["internal_note_3"] + "|WD FY" + FiscalYear(file.TimeNow())
   //using sjson insert new library, location, append note
   itemRec,_ = sjson.SetBytes(itemRec, "item_data.location.value", newLocVal)
   itemRec,_ = sjson.SetBytes(itemRec, "item_data.internal_note_3", internalNote3)
@@ -63,12 +65,12 @@ func UpdateItem(newLocType string, data string)([]byte, connect.Response){
   return itemRec, connect.Response{Id:"", Message: connect.BuildMessage("")}
 }
 
-type Key struct{
+type WDKey struct{
   Libname, Libtype, Proptype string
 }
 
-func LoadMap()map[Key]string{
-  libmap := map[Key]string{}
+func WithdrawDeselectMap()map[WDKey]string{
+  libmap := map[WDKey]string{}
   homedir := os.Getenv("HOME_DIR")
   src,_ := os.Open(homedir + "/withdraw/library_map.txt")
   data,_ := io.ReadAll(src)
@@ -76,7 +78,7 @@ func LoadMap()map[Key]string{
   for _,line := range lines{
     if string(line) == "" { break }
     arr := bytes.Split(line, []byte("\t"))
-    libmap[Key{string(arr[0]), string(arr[1]), string(arr[2])}] = string(arr[3])
+    libmap[WDKey{string(arr[0]), string(arr[1]), string(arr[2])}] = string(arr[3])
   }
   return libmap
 }

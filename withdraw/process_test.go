@@ -2,19 +2,9 @@ package withdraw
 
 import (
   "testing"
-  "slices"
   "fmt"
   "net/url"
 )
-
-func TestExtractEligibles( t *testing.T){
-  list := map[string][]bool{}
-  list["a"] = []bool{true, true}
-  list["b"] = []bool{true, false}
-  list["c"] = []bool{false, true}
-  newlist := ExtractEligibles(list, 0)
-  if !slices.Equal(newlist, []string{"a", "b"}) { t.Errorf("incorrect extraction") }
-}
 
 func TestBuildItemLink(t *testing.T){
   mmsId := "12345"

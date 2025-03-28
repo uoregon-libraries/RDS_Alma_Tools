@@ -9,6 +9,7 @@ import(
   "io"
   "io/ioutil"
   "strings"
+  "rds_alma_tools/file"
 )
 
 func TestCheckJob(t *testing.T){
@@ -29,7 +30,7 @@ func TestCheckJob(t *testing.T){
   os.Setenv("VERBOSE", "true")
   os.Setenv("DEBUG", "true")
   filename := "testcheckjob"
-  list := map[string][]bool{"112358":[]bool{true,true}}
+  list := map[string]Eligible{"112358":Eligible{Unlink: true, Suppress: true, Oclc: "1234"}}
 
   joblink1 := ts.URL + jobpath1
   CheckJob(joblink1, DummyJob, filename, list)
@@ -44,10 +45,10 @@ func TestCheckJob(t *testing.T){
   _ = os.Remove(filepath)
 }
 
-func DummyJob(filename string, list map[string][]bool){
+func DummyJob(filename string, list map[string]Eligible){
   str := "From dummy job: "
   for k,_ := range list{ str += k }
-  WriteReport(filename, str)
+  file.WriteReport(filename, []string{str})
 }
 
 func TestSubmitJob(t *testing.T){
@@ -65,11 +66,11 @@ func TestSubmitJob(t *testing.T){
   os.Setenv("DEBUG", "true")
   os.Setenv("ALMA_KEY", "123123")
   os.Setenv("TEST_URL", ts.URL)
-  filename := "testsubmitjob"
+
   var params = []Param{
     Param{ Name: Val{ Value: "set_id" }, Value: "56789" },
   }
-  link,_ := SubmitJob(filename, "123456", params)
+  link,_ := SubmitJob("123456", params)
   if link != "http://example.org/12121212" { t.Errorf("link was not returned") }
 }
 
