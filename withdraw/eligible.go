@@ -15,6 +15,7 @@ type Eligible struct {
   Suppress bool
   Unset    bool
   Oclc     string
+  Locations []string
 }
 
 //The only errors will be from connect.Get
