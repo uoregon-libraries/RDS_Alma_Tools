@@ -15,6 +15,7 @@ type Eligible struct {
   Suppress bool
   Unset    bool
   Oclc     string
+  SerialRequiresAction bool // requires further handling after withdraw process
   Locations []string
 }
 
