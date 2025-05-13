@@ -111,12 +111,34 @@ func ProcessUnset(filename string, eligibleLists map[string]Eligible){
     return
   }
   oclc.UnsetHoldings(filename, newlist)
+  Final_Report(filename, eligibleLists)
+}
+
+func Final_Report(filename string, eligibleLists map[string]Eligible){
+  results := []string{}
+  for k, v := range eligibleLists{
+    if v.SerialRequiresAction { results = append(results, k + ": " + "Serial Requires Action") }
+  }
+  file.WriteReport(filename, results)
 }
 
 func BuildItemLink(mmsId string, holdingId string, pid string)string{
   _url,_ := url.Parse(BaseUrl())
   _url = _url.JoinPath("bibs", mmsId, "holdings", holdingId, "items", pid)
   return _url.String()
+}
+
+func BuildBibLink(mmsId string)string{
+  _url,_ := url.Parse(BaseUrl())
+  _url = _url.JoinPath("bibs", mmsId)
+  return _url.String()
+}
+
+func BuildHoldingLink(mmsId string, holdingId string)string{
+  _url,_ := url.Parse(BaseUrl())
+  _url = _url.JoinPath("bibs", mmsId, "holdings", holdingId)
+  return _url.String()
+
 }
 
 func ApiKey()string{

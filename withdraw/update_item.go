@@ -38,7 +38,8 @@ func UpdateItems(filename string, loc_type string, data []byte)(map[string]Eligi
     }
     if body != nil { r.Responses = append(r.Responses, connect.Response{ Id: url, Message: connect.BuildMessage("success") } )
       pid := ExtractPid(url)
-      pids[pid] = Eligible{}
+      lm := LineMap(string(line))
+      pids[pid] = Eligible{ Locations: []string{ lm["location"] } }
     }
   }
   r.WriteReport(filename)

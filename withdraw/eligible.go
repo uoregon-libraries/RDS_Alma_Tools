@@ -15,6 +15,7 @@ type Eligible struct {
   Suppress bool
   Unset    bool
   Oclc     string
+  Locations []string
 }
 
 //The only errors will be from connect.Get
@@ -32,16 +33,57 @@ func BibItems(mmsId string)([]string, error) {
     arr = append(arr, link.String())
   }
   return arr, nil
-
 }
 
-func UniqueBibs(data []byte)map[string]string{
-  unique := map[string]string{}
+func HandleCases(mmsId string, eligible Eligible)(Eligible, error){
+  url := BuildBibLink(mmsId)
+  params := []string{ ApiKey() }
+  json, err := connect.Get(url, params)
+  if err != nil { return eligible, err }
+  serial := Is_serial(json)
+  if serial {
+    e, err := Handle_serial(mmsId, eligible)
+    return e, err
+  }
+  return eligible, nil
+}
+
+func Handle_serial(mmsId string, eligible Eligible)(Eligible, error){
+  holding_json, err := Holdings(mmsId)
+  if err != nil { return eligible, err }
+  eligible.SerialRequiresAction = false
+  tr := gjson.GetBytes(holding_json, "total_record_count")
+  if tr.Int() == 1 { return eligible, nil }
+  holdings := gjson.GetBytes(holding_json, "holding")
+  for _, h := range holdings.Array() {
+    h_loc := gjson.Get(h.String(), "location.value")
+    for _, l := range eligible.Locations {
+      if h_loc.String() == l { eligible.SerialRequiresAction = true }
+    }
+  }
+  return eligible, nil
+}
+
+func Holdings(mmsId string)([]byte,error){
+  url := BuildHoldingLink(mmsId, "")
+  params := []string{ ApiKey() }
+  json, err := connect.Get(url, params)
+  if err != nil { return nil, err }
+  return json, nil
+}
+
+func UniqueBibs(data []byte) map[string]Eligible {
+  unique := map[string]Eligible{}
   lines := bytes.Split(data, []byte("\n"))
   for _, line := range lines{
     if string(line) == "" { break }
     lineMap := LineMap(string(line))
-    unique[lineMap["mms_id"]] = lineMap["oclc"]
+    e, ok := unique[lineMap["mms_id"]]
+    if ok {
+      e.Locations = append(e.Locations, lineMap["location"]) } else {
+      e = Eligible{ Oclc: lineMap["oclc"], Locations: []string{ lineMap["location"] } }
+    }
+    unique[lineMap["mms_id"]] = e
   }
   return unique
 }
@@ -105,7 +147,9 @@ func EligibleToUnlinkSuppressUnsetList(data []byte)(map[string]Eligible, []strin
     if err != nil { errs = append(errs, fmt.Sprintf("Eligibility error: %s", k)); continue }
     eligible, err := EligibleToUnlinkSuppressUnset(items)
     if err != nil { errs = append(errs, fmt.Sprintf("Eligibility error: %s", k)); continue }
-    eligible.Oclc = v
+    eligible.Oclc = v.Oclc
+    eligible, err = HandleCases(k, eligible)
+    if err != nil { errs =  append(errs, fmt.Sprintf("Eligibility error: %s", k)); continue }
     eligibleList[k] = eligible
   }
   return eligibleList, errs

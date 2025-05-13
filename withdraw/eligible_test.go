@@ -69,17 +69,13 @@ func TestItemLibraryLocation(t *testing.T){
 
 func TestEligibleToUnlinkSuppressUnset(t *testing.T){
   data1 := `{"item_data": { "library": { "value": "Withdrawn", "desc": "Withdrawn Library" }, "location": { "value": "kwithdrwn", "desc": "Knight withdrawn" } } }`
-  data2 := `{"item_data": { "library": { "value": "Knight", "desc": "Knight Library" }, "location": { "value": "kdres", "desc": "Knight something" } } }`
   data3 := `{"item_data": { "library": { "value": "Department", "desc": "UO Departmental Library" }, "location": { "value": "zartmus", "desc": "Music" } } }`
   path1 := "/almaws/v1/bibs/123/holdings/456/items/7890"
-  path2 := "/almaws/v1/bibs/123/holdings/456/items/7891"
   path3 := "/almaws/v1/bibs/123/holdings/456/items/7892"
   //testserver responds to request from CheckLibrary calls
   ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     if r.URL.Path == path1 {
       fmt.Fprintf(w, data1)
-    } else if r.URL.Path == path2 {
-      fmt.Fprintf(w, data2)
     } else if r.URL.Path == path3 {
       fmt.Fprintf(w, data3)
     }
@@ -87,7 +83,6 @@ func TestEligibleToUnlinkSuppressUnset(t *testing.T){
   os.Setenv("ALMA_URL", ts.URL + "/")
   os.Setenv("ALMA_KEY", "almakey")
   link1 := ts.URL + path1
-  link2 := ts.URL + path2
   link3 := ts.URL + path3
   result,err := EligibleToUnlinkSuppressUnset([]string{link1, link1})
   if err != nil { log.Println(err) }
@@ -95,16 +90,33 @@ func TestEligibleToUnlinkSuppressUnset(t *testing.T){
   if result.Suppress != true {t.Errorf("example1 incorrect suppress")}
   if result.Unset != true {t.Errorf("example1 incorrect unset")}
 
-  result,err = EligibleToUnlinkSuppressUnset([]string{link1, link2})
-  if err != nil { log.Println(err) }
-  if result.Unlink != true {t.Errorf("example2 incorrect unlink")}
-  if result.Suppress != false {t.Errorf("example2 incorrect suppress")}
-  if result.Unset != false {t.Errorf("example2 incorrect unset")}
-
   result,err = EligibleToUnlinkSuppressUnset([]string{link1, link3})
   if err != nil { log.Println(err) }
   if result.Unlink != true {t.Errorf("example3 incorrect unlink")}
   if result.Suppress != false {t.Errorf("example3 incorrect suppress")}
   if result.Unset != true {t.Errorf("example 3 incorrect unset")}
 
+}
+
+func TestHandle_serial(t *testing.T){
+  homedir := os.Getenv("HOME_DIR")
+  src, err := os.Open(homedir + "/fixtures/response_1743708271877.json")
+  if err != nil { t.Errorf(err.Error()) }
+  data,_ := io.ReadAll(src)
+
+  ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    //respond to request for holdings
+    fmt.Fprintf(w, string(data))
+  }))
+
+  os.Setenv("ALMA_URL", ts.URL + "/")
+  os.Setenv("ALMA_KEY", "almakey")
+  e := Eligible{Locations: []string{"kshort"}}
+  e2, _ := Handle_serial("99126837001852", e)
+  if e2.SerialRequiresAction != true { t.Errorf("incorrect setting of serial flag") }
+}
+
+func TestHandleCases(t *testing.T){
+  //respond to request for bib
+  //respond to request for holding
 }

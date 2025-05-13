@@ -97,9 +97,9 @@ func TestUpdateItems(t *testing.T){
   content, err := ioutil.ReadFile(filepath)
   if err != nil { t.Errorf("unable to read report") }
   //test pids, which is a map, for existence of mmsid as a key
-  _,ok := pids["23193212440001852"]
+  e, ok := pids["23193212440001852"]
   if ok == false { t.Errorf("pids does not contain id") }
-
+  if e.Locations[0] != "sgames" { t.Errorf("map does not contain location") }
   id := gjson.Get(string(content), "id")
   if !strings.Contains(id.String(), path) { t.Errorf("response does not contain id") }
   message := gjson.Get(string(content), "report.message")
