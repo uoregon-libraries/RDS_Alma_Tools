@@ -98,7 +98,7 @@ func TestEligibleToUnlinkSuppressUnset(t *testing.T){
 
 }
 
-func TestHandle_serial(t *testing.T){
+func TestHandleSerial(t *testing.T){
   homedir := os.Getenv("HOME_DIR")
   src, err := os.Open(homedir + "/fixtures/response_1743708271877.json")
   if err != nil { t.Errorf(err.Error()) }
@@ -112,7 +112,7 @@ func TestHandle_serial(t *testing.T){
   os.Setenv("ALMA_URL", ts.URL + "/")
   os.Setenv("ALMA_KEY", "almakey")
   e := Eligible{Locations: []string{"kshort"}}
-  e2, _ := Handle_serial("99126837001852", e)
+  e2, _ := HandleSerial("99126837001852", e)
   if e2.SerialRequiresAction != true { t.Errorf("incorrect setting of serial flag") }
 }
 

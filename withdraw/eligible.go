@@ -16,11 +16,12 @@ type Eligible struct {
   Unset    bool
   Oclc     string
   SerialRequiresAction bool // requires further handling after withdraw process
+  BoundWithMult string
+  BoundWith bool
   Locations []string
 }
 
-//The only errors will be from connect.Get
-//propagate and return nil
+
 
 // retrieves all item links for a given bib
 func BibItems(mmsId string)([]string, error) {
@@ -41,15 +42,23 @@ func HandleCases(mmsId string, eligible Eligible)(Eligible, error){
   params := []string{ ApiKey() }
   json, err := connect.Get(url, params)
   if err != nil { return eligible, err }
-  serial := Is_serial(json)
+  serial := IsSerial(json)
   if serial {
-    e, err := Handle_serial(mmsId, eligible)
-    return e, err
+    eligible, err := HandleSerial(mmsId, eligible)
+    if err != nil { return eligible, err }
   }
+  boundwith, biblist := IsBoundWith(json)
+  eligible = HandleBoundWith(boundwith, biblist, eligible)
   return eligible, nil
 }
 
-func Handle_serial(mmsId string, eligible Eligible)(Eligible, error){
+func HandleBoundWith(boundwith bool, biblist string, eligible Eligible)Eligible{
+  eligible.BoundWith = boundwith
+  eligible.BoundWithMult = biblist
+  return eligible
+}
+
+func HandleSerial(mmsId string, eligible Eligible)(Eligible, error){
   holding_json, err := Holdings(mmsId)
   if err != nil { return eligible, err }
   eligible.SerialRequiresAction = false
