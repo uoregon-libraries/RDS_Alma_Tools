@@ -55,6 +55,11 @@ func HandleCases(mmsId string, eligible Eligible)(Eligible, error){
 func HandleBoundWith(boundwith bool, biblist string, eligible Eligible)Eligible{
   eligible.BoundWith = boundwith
   eligible.BoundWithMult = biblist
+  if boundwith {
+    eligible.Unlink = false
+    eligible.Suppress = false
+    eligible.Unset = false
+  }
   return eligible
 }
 
@@ -152,6 +157,7 @@ func EligibleToUnlinkSuppressUnsetList(data []byte)(map[string]Eligible, []strin
   var eligibleList = map[string]Eligible{}
   bibs := UniqueBibs(data)
   errs := []string{}
+  // if any errors returned, document the error and skip the bib (continue)
   for k,v := range bibs{
     items, err := BibItems(k)
     if err != nil { errs = append(errs, fmt.Sprintf("Eligibility error: %s", k)); continue }
