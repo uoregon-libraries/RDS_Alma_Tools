@@ -159,7 +159,7 @@ func EligibleToUnlinkSuppressUnsetList(data []byte)(map[string]Eligible, []strin
   var eligibleList = map[string]Eligible{}
   bibs := UniqueBibs(data)
   errs := []string{}
-  // if any errors returned, document the error and skip the bib (continue)
+  // if errors returned, document err, do not add bib to eligibleList (continue)
   for k,v := range bibs{
     items, err := BibItems(k)
     if err != nil { errs = append(errs, fmt.Sprintf("Eligibility error: %s", k)); continue }
