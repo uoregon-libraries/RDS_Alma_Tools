@@ -109,9 +109,9 @@ func ProcessUnset(filename string, eligibleLists map[string]Eligible){
   }
   if len(newlist) == 0 {
     file.WriteReport(filename, []string{ "Nothing to unset" })
-    return
+  } else {
+    oclc.UnsetHoldings(filename, newlist)
   }
-  oclc.UnsetHoldings(filename, newlist)
   Final_Report(filename, eligibleLists)
 }
 

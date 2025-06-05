@@ -84,18 +84,19 @@ func TestEligibleToUnlinkSuppressUnset(t *testing.T){
   os.Setenv("ALMA_KEY", "almakey")
   link1 := ts.URL + path1
   link3 := ts.URL + path3
-  result,err := EligibleToUnlinkSuppressUnset([]string{link1, link1})
+  e1 := Eligible{}
+  result,err := EligibleToUnlinkSuppressUnset([]string{link1, link1}, e1)
   if err != nil { log.Println(err) }
   if result.Unlink != true {t.Errorf("example1, incorrect unlink")}
   if result.Suppress != true {t.Errorf("example1 incorrect suppress")}
   if result.Unset != true {t.Errorf("example1 incorrect unset")}
 
-  result,err = EligibleToUnlinkSuppressUnset([]string{link1, link3})
+  e2 := Eligible{}
+  result,err = EligibleToUnlinkSuppressUnset([]string{link1, link3}, e2)
   if err != nil { log.Println(err) }
   if result.Unlink != true {t.Errorf("example3 incorrect unlink")}
   if result.Suppress != false {t.Errorf("example3 incorrect suppress")}
   if result.Unset != true {t.Errorf("example 3 incorrect unset")}
-
 }
 
 func TestHandleSerial(t *testing.T){
@@ -113,7 +114,7 @@ func TestHandleSerial(t *testing.T){
   os.Setenv("ALMA_KEY", "almakey")
   e := Eligible{Locations: []string{"kshort"}}
   e2, _ := HandleSerial("99126837001852", e)
-  if e2.SerialRequiresAction != true { t.Errorf("incorrect setting of serial flag") }
+  if !e2.SerialRequiresAction { t.Errorf("incorrect setting of serial flag") }
 }
 
 func TestHandleCases(t *testing.T){

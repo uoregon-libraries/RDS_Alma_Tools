@@ -44,7 +44,7 @@ func HandleCases(mmsId string, eligible Eligible)(Eligible, error){
   if err != nil { return eligible, err }
   serial := IsSerial(json)
   if serial {
-    eligible, err := HandleSerial(mmsId, eligible)
+    eligible, err = HandleSerial(mmsId, eligible)
     if err != nil { return eligible, err }
   }
   boundwith, biblist := IsBoundWith(json)
@@ -138,14 +138,16 @@ func ItemLibraryLocation(link string)(LLKey, error){
   return LLKey{LibCode: library.String(), LocCode: location.String()}, nil
 }
 
-func EligibleToUnlinkSuppressUnset(items []string)(Eligible, error){
+func EligibleToUnlinkSuppressUnset(items []string, e Eligible)(Eligible, error){
   locmap := LibraryLocationMap()
-  e := Eligible{Unlink: true, Suppress: true, Unset: true}
+  e.Unlink = true
+  e.Suppress = true
+  e.Unset = true
   for _, v:= range items{
     k,err := ItemLibraryLocation(v)
-    if err != nil { return Eligible{}, err }
+    if err != nil { return e, err }
     chart := locmap[k]
-    if chart.NZ == "" { return Eligible{}, errors.New("Eligibility not known") }
+    if chart.NZ == "" { return e, errors.New("Eligibility not known") }
     if chart.NZ == "Y" { e.Unlink = false }
     if chart.Primo == "Y" { e.Suppress = false }
     if chart.ORU == "Y" { e.Unset = false }
@@ -161,7 +163,7 @@ func EligibleToUnlinkSuppressUnsetList(data []byte)(map[string]Eligible, []strin
   for k,v := range bibs{
     items, err := BibItems(k)
     if err != nil { errs = append(errs, fmt.Sprintf("Eligibility error: %s", k)); continue }
-    eligible, err := EligibleToUnlinkSuppressUnset(items)
+    eligible, err := EligibleToUnlinkSuppressUnset(items, v)
     if err != nil { errs = append(errs, fmt.Sprintf("Eligibility error: %s", k)); continue }
     eligible.Oclc = v.Oclc
     eligible, err = HandleCases(k, eligible)
