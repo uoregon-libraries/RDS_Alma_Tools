@@ -1,0 +1,104 @@
+{
+  "holding": [
+    {
+      "library": {
+        "value": "Withdrawn",
+        "desc": "Withdrawn Library"
+      },
+      "location": {
+        "value": "kdeselect",
+        "desc": "Knight Deselected"
+      },
+      "holding_id": "22336655480001852",
+      "call_number": "HD28 .A24",
+      "suppress_from_publishing": "false",
+      "link": "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/99126837001852/holdings/22336655480001852"
+    },
+    {
+      "library": {
+        "value": "Knight",
+        "desc": "Knight Library"
+      },
+      "location": {
+        "value": "kshort",
+        "desc": "Knight periodicals"
+      },
+      "holding_id": "22204361760001852",
+      "call_number": "HD28 .A24",
+      "suppress_from_publishing": "false",
+      "link": "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/99126837001852/holdings/22204361760001852"
+    },
+    {
+      "library": {
+        "value": "Knight",
+        "desc": "Knight Library"
+      },
+      "location": {
+        "value": "kcurrper",
+        "desc": "Knight current periodicals"
+      },
+      "holding_id": "22204360940001852",
+      "call_number": "HD28 .A24",
+      "suppress_from_publishing": "false",
+      "link": "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/99126837001852/holdings/22204360940001852"
+    }
+  ],
+  "bib_data": {
+    "title": "Academy of Management journal.",
+    "author": "Academy of Management.",
+    "issn": "0001-4273",
+    "publisher": "Academy of Management.",
+    "mms_id": "99126837001852",
+    "network_number": [
+      "(OCoLC)ocm01460711",
+      "(OCoLC)01460711",
+      "(OCoLC)1436395744",
+      "(OCoLC)1383655455",
+      "(OCoLC)1246526587",
+      "(OCoLC)1242776968",
+      "(OCoLC)1203015840",
+      "(OCoLC)1200093667",
+      "(OCoLC)1179632641",
+      "(OCoLC)1166988781",
+      "(OCoLC)1166578269",
+      "(OCoLC)1166509491",
+      "(OCoLC)1166491025",
+      "(OCoLC)1159837089",
+      "(OCoLC)1156831802",
+      "(OCoLC)1153428847",
+      "(OCoLC)1153185208",
+      "(OCoLC)1145197541",
+      "(OCoLC)1137555167",
+      "(OCoLC)1124336371",
+      "(OCoLC)1109855576",
+      "(OCoLC)1097311917",
+      "(OCoLC)1063296313",
+      "(OCoLC)1057910071",
+      "(OCoLC)1043205818",
+      "(OCoLC)1032859721",
+      "(OCoLC)1012047043",
+      "(OCoLC)979679178",
+      "(OCoLC)963576256",
+      "(OCoLC)960250402",
+      "(OCoLC)949729042",
+      "(OCoLC)933314853",
+      "(OCoLC)879829099",
+      "(OCoLC)866113183",
+      "(OCoLC)832396266",
+      "(OCoLC)793945595",
+      "(OCoLC)692930329",
+      "(OCoLC)610392725",
+      "(OCoLC)317636080",
+      "(OCoLC)223036078",
+      "(OCoLC)183310419",
+      "(OCoLC)25736076",
+      "(OCoLC)6872381",
+      "(OCoLC)5379713",
+      "(EXLNZ-01ALLIANCE_NETWORK)9994854250001451"
+    ],
+    "place_of_publication": "Ada, Ohio :",
+    "date_of_publication": "1963",
+    "link": "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/99126837001852"
+  },
+  "total_record_count": 3
+}

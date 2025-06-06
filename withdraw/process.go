@@ -11,6 +11,7 @@ import(
   "time"
   "io"
   "fmt"
+  "slices"
 )
 
 func ProcessHandler(c echo.Context)(error){
@@ -108,18 +109,28 @@ func ProcessUnset(filename string, eligibleLists map[string]Eligible){
   }
   if len(newlist) == 0 {
     file.WriteReport(filename, []string{ "Nothing to unset" })
-    return
+  } else {
+    oclc.UnsetHoldings(filename, newlist)
   }
-  oclc.UnsetHoldings(filename, newlist)
   Final_Report(filename, eligibleLists)
 }
 
 func Final_Report(filename string, eligibleLists map[string]Eligible){
-  results := []string{}
+  serial_results := []string{"Serial items:"}
+  boundwith_results := []string{"Bound with items:"}
+  boundwith_mult := []string{"Bound with multiple:"}
   for k, v := range eligibleLists{
-    if v.SerialRequiresAction { results = append(results, k + ": " + "Serial Requires Action") }
+    if v.SerialRequiresAction {
+      serial_results = append(serial_results, k)
+    }
+    if v.BoundWithMult != "" {
+      boundwith_mult = append(boundwith_mult, k + ": " + v.BoundWithMult)
+    } else if v.BoundWith == true {
+      boundwith_results = append(boundwith_results, k)
+    }
   }
-  file.WriteReport(filename, results)
+  combined := slices.Concat(serial_results, boundwith_mult, boundwith_results)
+  file.WriteReport(filename, combined)
 }
 
 func BuildItemLink(mmsId string, holdingId string, pid string)string{
