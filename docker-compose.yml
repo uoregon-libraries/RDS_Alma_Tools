@@ -1,17 +1,76 @@
-version: '2'
+version: '3'
 
 services:
-  server:
+  app: &app
     image: uoregon-libraries/rds_alma_tools:20241113
-    ports: 
+    tty: true
+    volumes:
+      - .:/usr/local/src/rds_alma_tools
+
+  faktory:
+    image: contribsys/faktory:latest
+    volumes:
+      - ./data:/var/lib/faktory/db
+    ports:
+      - 7419:7419
+      - 7420:7420
+    environment:
+      - FAKTORY_PASSWORD=$FAKTORY_PASSWORD
+    command:
+      - faktory -b :7419 -w :7420 -e production
+
+  server:
+    <<: *app
+    ports:
       - '3000:3000'
+    environment:
+      - PORT=:3000
+      - FAKTORY_PROVIDER=$FAKTORY_PROVIDER
+      - FAKTORY_PASSWORD=$FAKTORY_PASSWORD
+      - HOME_DIR=$HOME_DIR
+      - REPORT_DIR=$REPORT_DIR
+
+  worker: &worker
+    <<: *app
     environment:
       - ALMA_URL=$ALMA_URL
       - PORT=:3000
       - HOME_DIR=$HOME_DIR
       - ALMA_KEY=$ALMA_KEY
+      - REPORT_DIR=$REPORT_DIR
+      - UPDATE_ITEM_STATUS_SET=$UPDATE_ITEM_STATUS_SET
+      - UPDATE_ITEM_STATUS_JOB_ID=$UPDATE_ITEM_STATUS_JOB_ID
+      - SUPPRESS_SET=$SUPPRESS_SET
+      - SUPPRESS_JOB_ID=$SUPPRESS_JOB_ID
+      - UNLINK_SET=$UNLINK_SET
+      - UNLINK_JOB_ID=$UNLINK_JOB_ID
+      - OCLC_URL=$OCLC_URL
+      - OCLC_AUTH_URL=$OCLC_AUTH_URL
+      - OCLC_NAME=$OCLC_NAME
+      - OCLC_PASS=$OCLC_PASS
+      - FAKTORY_PROVIDER=$FAKTORY_PROVIDER
+      - FAKTORY_PASSWORD=$FAKTORY_PASSWORD
+      - HOME_URL=$HOME_URL
+      - JOB_WAIT_TIME=$JOB_WAIT_TIME
+      - JOB_MAX_TRIES=7
       - VERBOSE=true
 
-    tty: true
-    volumes:
-      - .:/usr/local/src/rds_alma_tools
+  worker1:
+    <<: *worker
+    ports:
+      - '3001:3000'
+  worker2:
+    <<: *worker
+    ports:
+      - '3002:3000'
+  worker3:
+    <<: *worker
+    ports:
+      - '3003:3000'
+
+volumes:
+  server:
+  worker1:
+  worker2:
+  worker3:
+  faktory:
