@@ -2,8 +2,7 @@ version: '3'
 
 services:
   app: &app
-    image: uoregon-libraries/rds_alma_tools:20241113
-    tty: true
+    image: uoregon-libraries/rds-alma-tools:20250609
     volumes:
       - .:/usr/local/src/rds_alma_tools
 
@@ -16,8 +15,7 @@ services:
       - 7420:7420
     environment:
       - FAKTORY_PASSWORD=$FAKTORY_PASSWORD
-    command:
-      - faktory -b :7419 -w :7420 -e production
+    command: /faktory -b :7419 -w :7420 -e production
 
   server:
     <<: *app
@@ -25,19 +23,28 @@ services:
       - '3000:3000'
     environment:
       - PORT=:3000
+      - ALMA_URL=$ALMA_URL
+      - ALMA_KEY=$ALMA_KEY
       - FAKTORY_PROVIDER=$FAKTORY_PROVIDER
       - FAKTORY_PASSWORD=$FAKTORY_PASSWORD
-      - HOME_DIR=$HOME_DIR
-      - REPORT_DIR=$REPORT_DIR
+      - FAKTORY_URL=tcp://:$FAKTORY_PASSWORD@faktory:7419
+      - HOME_DIR=/usr/local/src/rds_alma_tools
+      - REPORT_DIR=/usr/local/src/rds_alma_tools/views/reports
+    tty: true
+    depends_on:
+      - worker1
+      - worker2
+      - worker3
+      - faktory
 
   worker: &worker
     <<: *app
     environment:
       - ALMA_URL=$ALMA_URL
       - PORT=:3000
-      - HOME_DIR=$HOME_DIR
+      - HOME_DIR=/usr/local/src/rds_alma_tools
       - ALMA_KEY=$ALMA_KEY
-      - REPORT_DIR=$REPORT_DIR
+      - REPORT_DIR=/usr/local/src/rds_alma_tools/views/reports
       - UPDATE_ITEM_STATUS_SET=$UPDATE_ITEM_STATUS_SET
       - UPDATE_ITEM_STATUS_JOB_ID=$UPDATE_ITEM_STATUS_JOB_ID
       - SUPPRESS_SET=$SUPPRESS_SET
@@ -50,6 +57,7 @@ services:
       - OCLC_PASS=$OCLC_PASS
       - FAKTORY_PROVIDER=$FAKTORY_PROVIDER
       - FAKTORY_PASSWORD=$FAKTORY_PASSWORD
+      - FAKTORY_URL=tcp://:$FAKTORY_PASSWORD@faktory:7419
       - HOME_URL=$HOME_URL
       - JOB_WAIT_TIME=$JOB_WAIT_TIME
       - JOB_MAX_TRIES=7
@@ -59,14 +67,17 @@ services:
     <<: *worker
     ports:
       - '3001:3000'
+    tty: true
   worker2:
     <<: *worker
     ports:
       - '3002:3000'
+    tty: true
   worker3:
     <<: *worker
     ports:
       - '3003:3000'
+    tty: true
 
 volumes:
   server:

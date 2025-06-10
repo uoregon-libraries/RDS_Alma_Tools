@@ -8,22 +8,22 @@ import(
   "log"
   "net/http"
   "os"
+  "io"
   "net/url"
   "time"
-  "io"
   "fmt"
   "slices"
 )
 
 func ProcessHandler(c echo.Context)(error){
   //get uploaded file
-  file, _ := c.FormFile("file")
-  src, err := file.Open()
+  f, _ := c.FormFile("file")
+  src, err := f.Open()
   bytedata,_ := io.ReadAll(src)
   if err != nil { log.Println(err); return c.String(http.StatusBadRequest, "Unable to open file") }
   defer src.Close()
   //generate a filename to use throughout
-  var filename interface{} = Filename()
+  var fname interface{} = file.Filename()
   var worker = c.FormValue("worker")
   var loc_type interface{} = c.FormValue("loc_type")
 
@@ -33,7 +33,7 @@ func ProcessHandler(c echo.Context)(error){
   client, err := faktory.Open()
   if err != nil{ log.Println(err); return c.String(http.StatusInternalServerError, err.Error())}
   //arg0 jobname, arg1 args for the job
-  job := faktory.NewJob("ProcessJob", filename, loc_type, stringdata)
+  job := faktory.NewJob("ProcessJob", fname, loc_type, stringdata)
   job.Queue = fmt.Sprintf("process%s", worker)
   job.ReserveFor = 7200
   retries := 0
@@ -41,7 +41,7 @@ func ProcessHandler(c echo.Context)(error){
   err = client.Push(job)
   if err != nil{ log.Println(err); return c.String(http.StatusInternalServerError, err.Error()) }
   base_url := os.Getenv("HOME_URL")
-  return c.HTML(http.StatusOK, fmt.Sprintf("<p>Relevant updates will be written to <a href=\"%s/reports/%s\">%s</a></p>", base_url, filename, filename))
+  return c.HTML(http.StatusOK, fmt.Sprintf("<p>Relevant updates will be written to <a href=\"%s/reports/%s\">%s</a></p>", base_url, fname, fname))
 }
 
 func Process(filename, loc_type string, data []byte){
