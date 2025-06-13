@@ -1,17 +1,87 @@
-version: '2'
+version: '3'
 
 services:
+  app: &app
+    image: uoregon-libraries/rds-alma-tools:20250609
+    volumes:
+      - .:/usr/local/src/rds_alma_tools
+
+  faktory:
+    image: contribsys/faktory:latest
+    volumes:
+      - ./data:/var/lib/faktory/db
+    ports:
+      - 7419:7419
+      - 7420:7420
+    environment:
+      - FAKTORY_PASSWORD=$FAKTORY_PASSWORD
+    command: /faktory -b :7419 -w :7420 -e production
+
   server:
-    image: uoregon-libraries/rds_alma_tools:20241113
-    ports: 
+    <<: *app
+    ports:
       - '3000:3000'
+    environment:
+      - PORT=:3000
+      - ALMA_URL=$ALMA_URL
+      - ALMA_KEY=$ALMA_KEY
+      - FAKTORY_PROVIDER=$FAKTORY_PROVIDER
+      - FAKTORY_PASSWORD=$FAKTORY_PASSWORD
+      - FAKTORY_URL=tcp://:$FAKTORY_PASSWORD@faktory:7419
+      - HOME_DIR=/usr/local/src/rds_alma_tools
+      - REPORT_DIR=/usr/local/src/rds_alma_tools/views/reports
+    tty: true
+    depends_on:
+      - worker1
+      - worker2
+      - worker3
+      - faktory
+
+  worker: &worker
+    <<: *app
     environment:
       - ALMA_URL=$ALMA_URL
       - PORT=:3000
-      - HOME_DIR=$HOME_DIR
+      - HOME_DIR=/usr/local/src/rds_alma_tools
       - ALMA_KEY=$ALMA_KEY
+      - REPORT_DIR=/usr/local/src/rds_alma_tools/views/reports
+      - UPDATE_ITEM_STATUS_SET=$UPDATE_ITEM_STATUS_SET
+      - UPDATE_ITEM_STATUS_JOB_ID=$UPDATE_ITEM_STATUS_JOB_ID
+      - SUPPRESS_SET=$SUPPRESS_SET
+      - SUPPRESS_JOB_ID=$SUPPRESS_JOB_ID
+      - UNLINK_SET=$UNLINK_SET
+      - UNLINK_JOB_ID=$UNLINK_JOB_ID
+      - OCLC_URL=$OCLC_URL
+      - OCLC_AUTH_URL=$OCLC_AUTH_URL
+      - OCLC_NAME=$OCLC_NAME
+      - OCLC_PASS=$OCLC_PASS
+      - FAKTORY_PROVIDER=$FAKTORY_PROVIDER
+      - FAKTORY_PASSWORD=$FAKTORY_PASSWORD
+      - FAKTORY_URL=tcp://:$FAKTORY_PASSWORD@faktory:7419
+      - HOME_URL=$HOME_URL
+      - JOB_WAIT_TIME=$JOB_WAIT_TIME
+      - JOB_MAX_TRIES=7
       - VERBOSE=true
 
+  worker1:
+    <<: *worker
+    ports:
+      - '3001:3000'
     tty: true
-    volumes:
-      - .:/usr/local/src/rds_alma_tools
+  worker2:
+    <<: *worker
+    ports:
+      - '3002:3000'
+    tty: true
+  worker3:
+    <<: *worker
+    ports:
+      - '3003:3000'
+    tty: true
+
+volumes:
+  server:
+  worker1:
+  worker2:
+  worker3:
+  faktory:
