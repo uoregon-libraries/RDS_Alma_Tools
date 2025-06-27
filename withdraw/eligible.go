@@ -7,6 +7,7 @@ import(
   "os"
   "io"
   "fmt"
+  "log"
   "errors"
 )
 
@@ -115,18 +116,20 @@ type LLKey struct{
   LocCode string
 }
 
-func LibraryLocationMap()map[LLKey]locationVals{
+func LibraryLocationMap()(map[LLKey]locationVals, error){
   locmap := map[LLKey]locationVals{}
   homedir := os.Getenv("HOME_DIR")
-  src,_ := os.Open(homedir + "/withdraw/location_eligibility.txt")
-  data,_ := io.ReadAll(src)
+  src, err := os.Open(homedir + "/withdraw/location_eligibility.txt")
+  if err != nil { log.Println(err); return nil, err }
+  data, err := io.ReadAll(src)
+  if err != nil { log.Println(err); return nil, err }
   lines := bytes.Split(data, []byte("\n"))
   for _,line := range lines{
     if string(line) == "" { break }
     arr := bytes.Split(line, []byte("\t"))
     locmap[LLKey{string(arr[0]), string(arr[1])}] = locationVals{NZ: string(arr[2]), Primo: string(arr[3]), ORU: string(arr[4]), UOL: string(arr[5])}
   }
-  return locmap
+  return locmap, nil
 }
 
 func ItemLibraryLocation(link string)(LLKey, error){
@@ -139,7 +142,8 @@ func ItemLibraryLocation(link string)(LLKey, error){
 }
 
 func EligibleToUnlinkSuppressUnset(items []string, e Eligible)(Eligible, error){
-  locmap := LibraryLocationMap()
+  locmap, err := LibraryLocationMap()
+  if err != nil { return e, err }
   e.Unlink = true
   e.Suppress = true
   e.Unset = true
