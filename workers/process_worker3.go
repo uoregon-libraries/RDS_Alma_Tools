@@ -10,6 +10,7 @@ func main(){
   mgr.Concurrency = 1
   mgr.Register("HelloJob", withdraw.HelloJobWorker)
   mgr.Register("ProcessJob", withdraw.CheckJobWorker)
+  mgr.Register("VerifyJob", withdraw.VerifyWorker)
   mgr.ProcessStrictPriorityQueues("process3")
   mgr.Run()
 }
