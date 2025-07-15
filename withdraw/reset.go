@@ -90,8 +90,8 @@ func ResetStatus(filename string, list map[string]Eligible, eligibleLists map[st
   if err != nil { file.WriteReport(filename, []string{ err.Error() }); return}
     var params = []Param{
       Param{ Name: Val{ Value: "MISSING_STATUS_selected" }, Value: "true"},
-      Param{ Name: Val{ Value: "MISSING_STATUS_value" }, Value: "NULL" },
-      Param{ Name: Val{ Value: "MISSING_STATUS_condition" }, Value: "NULL" },
+      Param{ Name: Val{ Value: "MISSING_STATUS_value" }, Value: "Null" },
+      Param{ Name: Val{ Value: "MISSING_STATUS_condition" }, Value: "Null" },
       Param{ Name: Val{ Value: "set_id" }, Value: setid },
     }
   instance,err := SubmitJob(jobid, params)
