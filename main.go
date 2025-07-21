@@ -20,5 +20,8 @@ func main() {
   e.File("/withdraw/set.html", home + "/views/withdraw/set.html")
   e.GET("/report_list", withdraw.ListReportsHandler)
   e.File("/version", home + "/version.txt")
+  e.File("/withdraw/verify.html", home + "/views/withdraw/verify.html")
+  e.POST("/withdraw/verify", withdraw.ExportVerifyHandler)
+
   e.Logger.Fatal(e.Start(os.Getenv("PORT")))
 }

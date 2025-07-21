@@ -16,3 +16,11 @@ func ProcessWorker(ctx context.Context, args ...interface{}) error{
   return nil
 }
 
+func VerifyWorker(ctx context.Context, args ...interface{}) error{
+  help := worker.HelperFor(ctx)
+  filename := args[0].(string)
+  data := args[1].(string)
+  VerifyList(filename, []byte(data))
+  log.Printf("Job %s executed. filename: %s", help.Jid(), filename)
+  return nil
+}

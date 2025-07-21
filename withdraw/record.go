@@ -16,7 +16,7 @@ func (r Record)Stringify()string{
   str := fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
     r.Bib_data.Mms_id, 
     r.Bib_data.Title,
-    OclcSelect(r.Bib_data.Oclc),
+    OclcSelect(r.Bib_data.Network),
     r.Holding_data.Holding_id,
     r.Item_data.Item_pid,
     r.Item_data.Barcode,
@@ -35,7 +35,8 @@ func (r Record)Stringify()string{
 type Bib struct{
   Mms_id string `json:"mms_id"`
   Title string `json:"title"`
-  Oclc []string `json:"network_number"`
+  Bib_suppress string `json:"bib_suppress_from_publishing"`
+  Network []string `json:"network_number"`
 }
 
 type Holding struct{
@@ -72,6 +73,17 @@ func LineMap(line string)map[string]string{
     m[key] = arr[ind]
   }
   return m
+}
+
+func AllianceLinked(vals []string)string{
+  re := regexp.MustCompile(`\(EXLNZ-01ALLIANCE_NETWORK\)`)
+  for _, val := range vals {
+    arr := re.FindStringSubmatch(val)
+    if arr != nil {
+      return "true"
+    }
+  }
+  return "false"
 }
 
 func OclcSelect(vals []string)string{

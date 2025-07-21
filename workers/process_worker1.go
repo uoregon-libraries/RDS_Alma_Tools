@@ -8,8 +8,9 @@ import(
 func main(){
   mgr := worker.NewManager()
   mgr.Concurrency = 1
-  mgr.Register("ProcessJob", withdraw.ProcessWorker)
   mgr.Register("HelloJob", withdraw.HelloJobWorker)
+  mgr.Register("ProcessJob", withdraw.ProcessWorker)
+  mgr.Register("VerifyJob", withdraw.VerifyWorker)
   mgr.ProcessStrictPriorityQueues("process1")
   mgr.Run()
 }
