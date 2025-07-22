@@ -24,3 +24,12 @@ func VerifyWorker(ctx context.Context, args ...interface{}) error{
   log.Printf("Job %s executed. filename: %s", help.Jid(), filename)
   return nil
 }
+func RestartWorker(ctx context.Context, args ...interface{}) error{
+  help := worker.HelperFor(ctx)
+  filename := args[0].(string)
+  stage := args[1].(string)
+  data := args[2].(string)
+  Restart(filename, stage, []byte(data))
+  log.Printf("Job %s executed. filename: %s", help.Jid(), filename)
+  return nil
+}
