@@ -8,7 +8,6 @@ import(
 func main(){
   mgr := worker.NewManager()
   mgr.Concurrency = 1
-  mgr.Register("HelloJob", withdraw.HelloJobWorker)
   mgr.Register("ProcessJob", withdraw.ProcessWorker)
   mgr.Register("VerifyJob", withdraw.VerifyWorker)
   mgr.Register("RestartJob", withdraw.RestartWorker)
