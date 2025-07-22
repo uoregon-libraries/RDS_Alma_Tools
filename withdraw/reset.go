@@ -7,7 +7,6 @@ import(
   "rds_alma_tools/connect"
   "rds_alma_tools/file"
   "os"
-  "io"
   "log"
   "fmt"
   "bytes"
@@ -18,7 +17,7 @@ import(
 )
 
 func ResetHandler(c echo.Context)(error){
-  reset_export := os.GetEnv("RESET_EXPORT_DATA")
+  reset_export := os.Getenv("RESET_EXPORT_DATA")
   data, err := ReadFixture(reset_export)
   if err != nil { log.Println(err); return c.String(http.StatusBadRequest, "Unable to open file") }
   //generate a filename to write log-type information to for the user
@@ -30,7 +29,7 @@ func ResetHandler(c echo.Context)(error){
 func ProcessReset(filename string, data []byte){
   pids := ResetItems(filename, data)
   bibs := UniqueBibs(data)
-  reset_verify := os.GetEnv("RESET_VERIFY_DATA")
+  reset_verify := os.Getenv("RESET_VERIFY_DATA")
   data, err := ReadFixture(reset_verify)
   if err != nil { log.Println(err); return }
   bibs, err = ResetEligibility(data, bibs)
