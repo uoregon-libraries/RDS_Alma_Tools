@@ -11,6 +11,7 @@ func main(){
   mgr.Register("HelloJob", withdraw.HelloJobWorker)
   mgr.Register("ProcessJob", withdraw.ProcessWorker)
   mgr.Register("VerifyJob", withdraw.VerifyWorker)
+  mgr.Register("RestartJob", withdraw.RestartWorker)
   mgr.ProcessStrictPriorityQueues("process1")
   mgr.Run()
 }
