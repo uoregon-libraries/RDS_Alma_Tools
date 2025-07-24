@@ -24,7 +24,8 @@ func main() {
   e.POST("/withdraw/verify", withdraw.ExportVerifyHandler)
   e.File("/withdraw/restart.html", home + "/views/withdraw/restart.html")
   e.POST("/withdraw/restart", withdraw.RestartHandler)
-
+  e.POST("/test/reset", withdraw.ResetHandler)
 
   e.Logger.Fatal(e.Start(os.Getenv("PORT")))
 }
+
