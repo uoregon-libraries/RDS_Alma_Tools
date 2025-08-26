@@ -43,7 +43,7 @@ func ExportVerifyHandler(c echo.Context)error{
 
 func VerifyList(filename string, data []byte){
   lines := bytes.Split(data, []byte("\n"))
-  datalist := []string{}
+  datalist := []string{"mms_id", "barcode", "oclc", "pid", "old-location", "new-location", "item status", "linked", "suppressed", "oclc-is-set"}
   for _, line := range lines{
     if string(line) == "" { break }
     old_data := LineMap(string(line))
@@ -55,7 +55,7 @@ func VerifyList(filename string, data []byte){
 }
 
 func FormatLine(lineMap map[string]string) string{
-  return fmt.Sprintf("%s\t%s\t%s\t%s", lineMap["mms_id"], lineMap["barcode"], lineMap["pid"], lineMap["location"])
+  return fmt.Sprintf("%s\t%s\t%s\t%s\t%s", lineMap["mms_id"], lineMap["barcode"], lineMap["oclc"], lineMap["pid"], lineMap["location"])
 }
 
 func VerifyItem(url string, oclc_num string)(string){
@@ -67,5 +67,5 @@ func VerifyItem(url string, oclc_num string)(string){
   if err != nil { log.Println(err); return ""}
   oclc_is_set, err := oclc.CheckHolding(oclc_num)
   if err != nil { oclc_is_set = "unable to confirm" }
-  return fmt.Sprintf("%s\t%s\t%s\t%s\t%s",r.Item_data.Location.Value, r.Item_data.Base_status.Desc,r.Bib_data.Bib_suppress, AllianceLinked(r.Bib_data.Network), oclc_is_set) 
+  return fmt.Sprintf("%s\t%s\t%s\t%s\t%s",r.Item_data.Location.Value, r.Item_data.Base_status.Desc, AllianceLinked(r.Bib_data.Network), r.Bib_data.Bib_suppress, oclc_is_set)
 }
