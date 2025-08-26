@@ -43,7 +43,8 @@ func ExportVerifyHandler(c echo.Context)error{
 
 func VerifyList(filename string, data []byte){
   lines := bytes.Split(data, []byte("\n"))
-  datalist := []string{"mms_id", "barcode", "oclc", "pid", "old-location", "new-location", "item status", "linked", "suppressed", "oclc-is-set"}
+  header := "mms_id\tbarcode\toclc\tpid\told-location\tnew-location\titem status\tlinked\tsuppressed\toclc-is-set"
+  datalist := []string{ header }
   for _, line := range lines{
     if string(line) == "" { break }
     old_data := LineMap(string(line))
