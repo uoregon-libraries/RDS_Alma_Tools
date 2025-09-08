@@ -31,11 +31,11 @@ func TestProcessItem(t *testing.T){
   arr := strings.Split(str, "\t")
   fmt.Println("length")
   fmt.Println(arr[14])
-  if arr[0] != "9984898401852" { t.Errorf("mms_id incorrect") }
+  if arr[0] != "'9984898401852" { t.Errorf("mms_id incorrect") }
   if arr[1] != "XBox 360" { t.Errorf("title incorrect") }
   if arr[2] != "12345678" { t.Errorf("oclc incorrect") }
   if arr[3] != "22274069860001852" { t.Errorf("holding id incorrect") }
-  if arr[4] != "23193212440001852" { t.Errorf("pid incorrect") }
+  if arr[4] != "'23193212440001852" { t.Errorf("pid incorrect") }
   if arr[5] != "35025040997286" { t.Errorf("barcode incorrect") }
   if arr[6] != "Item not in place" { t.Errorf("base_status incorrect") }
   if arr[7] != "Science" { t.Errorf("library incorrect") }

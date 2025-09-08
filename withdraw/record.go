@@ -14,11 +14,11 @@ type Record struct{
 
 func (r Record)Stringify()string{
   str := fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
-    r.Bib_data.Mms_id, 
+    IDStringify(r.Bib_data.Mms_id),
     r.Bib_data.Title,
     OclcSelect(r.Bib_data.Network),
     r.Holding_data.Holding_id,
-    r.Item_data.Item_pid,
+    IDStringify(r.Item_data.Item_pid),
     r.Item_data.Barcode,
     r.Item_data.Base_status.Desc,
     r.Item_data.Library.Value,
@@ -65,6 +65,7 @@ type Desc struct{
   Desc string `json:"desc"`
 }
 
+// BriefItemHead is in export.go
 func LineMap(line string)map[string]string{
   m := map[string]string{}
   keys := strings.Split(BriefItemHead(), "\t")
@@ -72,6 +73,8 @@ func LineMap(line string)map[string]string{
   for ind, key := range keys{
     m[key] = arr[ind]
   }
+  m["mms_id"] = IDClean(m["mms_id"])
+  m["pid"] = IDClean(m["pid"])
   return m
 }
 
@@ -95,4 +98,15 @@ func OclcSelect(vals []string)string{
     }
   }
   return ""
+}
+
+func IDClean(id string)string{
+  clean, found := strings.CutPrefix(id, "'")
+  if found { return clean }
+
+  return id
+}
+
+func IDStringify(id string)string{
+  return "'" + id
 }

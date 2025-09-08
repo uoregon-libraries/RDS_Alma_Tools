@@ -56,7 +56,7 @@ func VerifyList(filename string, data []byte){
 }
 
 func FormatLine(lineMap map[string]string) string{
-  return fmt.Sprintf("%s\t%s\t%s\t%s\t%s", lineMap["mms_id"], lineMap["barcode"], lineMap["oclc"], lineMap["pid"], lineMap["location"])
+  return fmt.Sprintf("%s\t%s\t%s\t%s\t%s", IDStringify(lineMap["mms_id"]), lineMap["barcode"], lineMap["oclc"], IDStringify(lineMap["pid"]), lineMap["location"])
 }
 
 func VerifyItem(url string, oclc_num string)(string){
