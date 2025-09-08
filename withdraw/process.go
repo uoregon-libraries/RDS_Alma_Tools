@@ -136,16 +136,25 @@ func Final_Report(filename string, eligibleLists map[string]Eligible){
   boundwith_mult := []string{"Bound with multiple:"}
   for k, v := range eligibleLists{
     if v.SerialRequiresAction {
-      serial_results = append(serial_results, k)
+      serial_results = append(serial_results, IDStringify(k))
     }
     if v.BoundWithMult != "" {
-      boundwith_mult = append(boundwith_mult, k + ": " + v.BoundWithMult)
+      boundwith_mult = append(boundwith_mult, IDStringify(k) + "\t" + v.BoundWithMult)
     } else if v.BoundWith == true {
-      boundwith_results = append(boundwith_results, k)
+      boundwith_results = append(boundwith_results, IDStringify(k))
     }
   }
   combined := slices.Concat(serial_results, boundwith_mult, boundwith_results)
   file.WriteReport(filename, combined)
+  if len(serial_results) > 1 {
+    file.WriteReport(filename + "_serials.tsv", serial_results)
+  }
+  if len(boundwith_results) > 1 {
+    file.WriteReport(filename + "_bw_items.tsv", boundwith_results)
+  }
+  if len(boundwith_mult) > 1 {
+    file.WriteReport(filename + "_bw_multiple.tsv", boundwith_mult)
+  }
 }
 
 func BuildItemLink(mmsId string, holdingId string, pid string)string{
